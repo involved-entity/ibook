@@ -1,0 +1,29 @@
+[project]
+name = "ibook-backend"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.12",
+    "fastapi-users>=14.0.1",
+    "ruff>=0.11.4",
+    "uvicorn>=0.34.0",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+extend-select = [
+    "E",
+    "F",
+    "I",
+    "ANN",
+]
+ignore = ["ANN204", "ANN002", "ANN003"]
+dummy-variable-rgx = "__.*"
+
+[tool.ruff.format]
+quote-style = "double"
