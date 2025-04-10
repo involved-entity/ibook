@@ -17,7 +17,9 @@ class Review(Base):
     book_id: Mapped[int] = mapped_column(ForeignKey("books.id"))
     rating: Mapped[int] = mapped_column(Integer)
     text: Mapped[str] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(server_default=func.now(), default=lambda: datetime.now(UTC))
+    created_at: Mapped[datetime] = mapped_column(
+        server_default=func.now(), default=lambda: datetime.now(UTC).replace(tzinfo=None)
+    )
 
     user: Mapped["User"] = relationship(back_populates="reviews")
     book: Mapped["Book"] = relationship(back_populates="reviews")

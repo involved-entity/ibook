@@ -17,6 +17,8 @@ class Payment(Base):
     amount: Mapped[float] = mapped_column(Numeric(10, 2))
     payment_method: Mapped[str] = mapped_column(String(50))
     transaction_id: Mapped[str] = mapped_column(String(100), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(server_default=func.now(), default=lambda: datetime.now(UTC))
+    created_at: Mapped[datetime] = mapped_column(
+        server_default=func.now(), default=lambda: datetime.now(UTC).replace(tzinfo=None)
+    )
 
     order: Mapped["Order"] = relationship(back_populates="payments")

@@ -20,12 +20,14 @@ class Book(Base):
     price: Mapped[float] = mapped_column(Numeric(10, 2))
     publication_year: Mapped[int] = mapped_column(nullable=True)
     pages: Mapped[int] = mapped_column(nullable=True)
-    created_at: Mapped[datetime] = mapped_column(server_default=func.now(), default=lambda: datetime.now(UTC))
+    created_at: Mapped[datetime] = mapped_column(
+        server_default=func.now(), default=lambda: datetime.now(UTC).replace(tzinfo=None)
+    )
     updated_at: Mapped[datetime] = mapped_column(
         server_default=func.now(),
-        default=lambda: datetime.now(UTC),
+        default=lambda: datetime.now(UTC).replace(tzinfo=None),
         server_onupdate=func.now(),
-        onupdate=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC).replace(tzinfo=None),
     )
 
     seller: Mapped["User"] = relationship(back_populates="seller_books")

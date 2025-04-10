@@ -2,26 +2,29 @@ import typing
 from datetime import datetime
 from typing import Any, Self
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from core.api.users.schemas import SellerSchema
 
 
 class BookImageSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     url: str
     is_main: bool
 
 
 class CategorySchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     name: str
     slug: str
 
 
 class BookCategorySchema(BaseModel):
-    category: CategorySchema
+    model_config = ConfigDict(from_attributes=True)
 
-    class Config:
-        from_attributes = True
+    category: CategorySchema
 
 
 class BookSchema(BaseModel):
@@ -54,3 +57,14 @@ class BookSchema(BaseModel):
         book = super().model_validate(obj)
         book.categories = [link.category.name for link in obj.categories]
         return book
+
+
+class BookCreateSchema(BaseModel):
+    title: str
+    author: str
+    description: typing.Optional[str] = None
+    price: float
+    publication_year: typing.Optional[int] = None
+    pages: typing.Optional[int] = None
+
+    categories: typing.Annotated[list[str], Field(exclude=True)]

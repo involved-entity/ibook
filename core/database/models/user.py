@@ -27,7 +27,9 @@ class User(Base, SQLAlchemyBaseUserTable[int]):
     last_name: Mapped[str] = mapped_column(String(50), nullable=True)
     phone: Mapped[str] = mapped_column(String(20))
     role: Mapped[UserRole] = mapped_column(SQLEnum(UserRole), default=UserRole.CUSTOMER)
-    registration_date: Mapped[datetime] = mapped_column(server_default=func.now(), default=lambda: datetime.now(UTC))
+    registration_date: Mapped[datetime] = mapped_column(
+        server_default=func.now(), default=lambda: datetime.now(UTC).replace(tzinfo=None)
+    )
 
     addresses: Mapped[list["Address"]] = relationship(back_populates="user")
     orders: Mapped[list["Order"]] = relationship(back_populates="user")

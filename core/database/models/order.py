@@ -27,12 +27,14 @@ class Order(Base):
     address_id: Mapped[int] = mapped_column(ForeignKey("addresses.id"))
     status: Mapped[OrderStatus] = mapped_column(SQLEnum(OrderStatus), default=OrderStatus.CREATED)
     total_amount: Mapped[float] = mapped_column(Numeric(10, 2))
-    created_at: Mapped[datetime] = mapped_column(server_default=func.now(), default=lambda: datetime.now(UTC))
+    created_at: Mapped[datetime] = mapped_column(
+        server_default=func.now(), default=lambda: datetime.now(UTC).replace(tzinfo=None)
+    )
     updated_at: Mapped[datetime] = mapped_column(
         server_default=func.now(),
-        default=lambda: datetime.now(UTC),
+        default=lambda: datetime.now(UTC).replace(tzinfo=None),
         server_onupdate=func.now(),
-        onupdate=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC).replace(tzinfo=None),
     )
     tracking_number: Mapped[str] = mapped_column(String(50), nullable=True)
 
