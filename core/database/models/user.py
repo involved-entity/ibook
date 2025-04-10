@@ -16,10 +16,10 @@ if TYPE_CHECKING:
     from core.database.models import Address, Book, Order, Review
 
 
-class UserRole(Enum):
-    ADMIN = "admin"
-    SELLER = "seller"
-    CUSTOMER = "customer"
+class UserRole(str, Enum):
+    ADMIN = "ADMIN"
+    SELLER = "SELLER"
+    CUSTOMER = "CUSTOMER"
 
 
 class User(Base, SQLAlchemyBaseUserTable[int]):
