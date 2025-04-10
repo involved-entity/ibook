@@ -4,6 +4,7 @@ from typing import Any, Self
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from core.api.categories.schemas import CategorySchema
 from core.api.users.schemas import SellerSchema
 
 
@@ -12,13 +13,6 @@ class BookImageSchema(BaseModel):
 
     url: str
     is_main: bool
-
-
-class CategorySchema(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    name: str
-    slug: str
 
 
 class BookCategorySchema(BaseModel):
