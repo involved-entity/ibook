@@ -9,7 +9,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from core.database.models.base import Base
 
 if TYPE_CHECKING:
-    from core.database.models import BookCategory, BookImage, OrderItem, User
+    from core.database.models import BookCategory, BookImage, OrderItem, Review, User
 
 
 class Book(Base):
@@ -30,5 +30,6 @@ class Book(Base):
 
     seller: Mapped["User"] = relationship(back_populates="seller_books")
     categories: Mapped[list["BookCategory"]] = relationship(back_populates="book")
+    reviews: Mapped[list["Review"]] = relationship(back_populates="book")
     order_items: Mapped[list["OrderItem"]] = relationship(back_populates="book")
     images: Mapped[list["BookImage"]] = relationship(back_populates="book")
