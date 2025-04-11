@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, status
 from fastapi.responses import ORJSONResponse, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.api.books.schemas import BookCreateSchema, BookSchema
+from core.api.books.schemas import BookCreateSchema, BookSchema, BookUpdateSchema
 from core.api.books.services import BooksCRUDService
 from core.api.users.dependencies import check_user_role
 from core.database import get_session
@@ -27,6 +27,17 @@ async def create_book(
 ) -> ORJSONResponse:
     book = await BooksCRUDService().create_entity(create_book_schema, session, user)
     return ORJSONResponse(book, status_code=status.HTTP_201_CREATED)
+
+
+@router.patch("/{book_id}", response_model=BookSchema)
+async def update_book(
+    book_id: int,
+    update_book_schema: BookUpdateSchema,
+    session: typing.Annotated[AsyncSession, Depends(get_session)],
+    user: typing.Annotated[User, Depends(check_user_role(UserRole.SELLER))],
+) -> ORJSONResponse:
+    book = await BooksCRUDService().update_entity(book_id, update_book_schema, session, user)
+    return ORJSONResponse(book, status_code=status.HTTP_200_OK)
 
 
 @router.delete("/{book_id}")

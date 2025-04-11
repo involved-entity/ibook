@@ -2,7 +2,7 @@ import typing
 
 from fastapi import HTTPException, status
 from pydantic import BaseModel
-from sqlalchemy import Select, select
+from sqlalchemy import Select, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database.models import Base, User
@@ -11,22 +11,25 @@ from core.database.models.user import UserRole
 M = typing.TypeVar("M", bound=Base)
 S = typing.TypeVar("S", bound=BaseModel)
 C = typing.TypeVar("C", bound=BaseModel)
+U = typing.TypeVar("U", bound=BaseModel)
 
 
 class CRUDService:
     model: typing.Type[M]
     schema_class: typing.Type[S]
     create_schema_class: typing.Type[C]
+    update_schema_class: typing.Type[U]
 
     user_field: str = ""
 
-    admin_or_owner_remove: bool = False
+    admin_or_owner_to_edit: bool = False
     save_user_id_before_create: bool = False
     binded_to_user: bool = False
 
     permission_denied_error: HTTPException = HTTPException(
         status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied."
     )
+    not_found_error: HTTPException = HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found.")
 
     def get_entities_default_query(self) -> Select:
         return select(self.model).order_by(self.model.id)
@@ -48,8 +51,26 @@ class CRUDService:
         await session.commit()
         entity = await self.after_entity_create(entity, create_entity, user, session)
         stmt = self.get_entities_default_query().where(self.model.id == entity.id)
-        book = await session.scalar(stmt)
-        return self.schema_class.model_validate(book).model_dump()
+        entity = await session.scalar(stmt)
+        return self.schema_class.model_validate(entity).model_dump()
+
+    async def update_entity(self, entity_id: int, update_entity_data: U, session: AsyncSession, user: User) -> S:
+        result = await session.execute(select(self.model).filter(self.model.id == entity_id))
+        entity = result.scalar_one_or_none()
+        if not entity:
+            raise self.not_found_error
+
+        entity = self.check_permissions_to_edit_entity(entity, user)
+
+        update_values = update_entity_data.model_dump(exclude_unset=True)
+
+        await session.execute(update(self.model).where(self.model.id == entity_id).values(**update_values))
+        await session.commit()
+
+        stmt = self.get_entities_default_query().where(self.model.id == entity.id)
+        entity = await session.scalar(stmt)
+
+        return self.schema_class.model_validate(entity).model_dump()
 
     async def remove_entity(self, entity_id: int, session: AsyncSession, user: User) -> None:
         entity = await session.get(self.model, entity_id)
@@ -57,12 +78,12 @@ class CRUDService:
         if self.binded_to_user and not (user.role == UserRole.ADMIN or getattr(entity, self.user_field) == user.id):
             raise self.permission_denied_error
 
-        entity = self.check_permissions_to_remove_entity(entity, user)
+        entity = self.check_permissions_to_edit_entity(entity, user)
         await session.delete(entity)
         await session.commit()
 
-    def check_permissions_to_remove_entity(self, entity: M, user: User) -> M:  # noqa
-        if self.admin_or_owner_remove and not (
+    def check_permissions_to_edit_entity(self, entity: M, user: User) -> M:  # noqa
+        if self.admin_or_owner_to_edit and not (
             user.role == UserRole.ADMIN or user.id == getattr(entity, self.user_field)
         ):
             raise self.permission_denied_error

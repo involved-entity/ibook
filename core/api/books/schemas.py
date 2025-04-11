@@ -62,3 +62,12 @@ class BookCreateSchema(BaseModel):
     pages: typing.Optional[int] = None
 
     categories: typing.Annotated[list[str], Field(exclude=True)]
+
+
+class BookUpdateSchema(BaseModel):
+    price: typing.Optional[float] = None
+    description: typing.Optional[str] = None
+    author: typing.Optional[str] = None
+    title: typing.Optional[str] = None
+    publication_year: typing.Optional[int] = None
+    pages: typing.Optional[int] = None

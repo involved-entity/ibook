@@ -15,7 +15,7 @@ class BooksCRUDService(CRUDService):
 
     user_field = "seller_id"
 
-    admin_or_owner_remove = True
+    admin_or_owner_to_edit = True
     save_user_id_before_create = True
 
     def get_entities_default_query(self) -> Select:

@@ -10,6 +10,6 @@ class AddressesCRUDService(CRUDService):
 
     user_field = "user_id"
 
-    admin_or_owner_remove = True
+    admin_or_owner_to_edit = True
     save_user_id_before_create = True
     binded_to_user = True
