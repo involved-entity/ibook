@@ -46,6 +46,7 @@ class CRUDService:
         entity = self.before_entity_create(entity, user)
         session.add(entity)
         await session.commit()
+        entity = await self.after_entity_create(entity, create_entity, user, session)
         stmt = self.get_entities_default_query().where(self.model.id == entity.id)
         book = await session.scalar(stmt)
         return self.schema_class.model_validate(book).model_dump()
@@ -72,4 +73,7 @@ class CRUDService:
         if self.save_user_id_before_create:
             setattr(entity, self.user_field, user.id)
 
+        return entity
+
+    async def after_entity_create(self, entity: M, create_entity: C, user: User, session: AsyncSession) -> M:
         return entity
