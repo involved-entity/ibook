@@ -5,7 +5,7 @@ from sqlalchemy.sql.selectable import Select
 
 from core.api.books.schemas import BookCreateSchema, BookSchema
 from core.api.services import CRUDService, M
-from core.database.models import Book, BookCategory, Category
+from core.database.models import Book, BookCategory, Category, User
 
 
 class BooksCRUDService(CRUDService):
@@ -25,6 +25,6 @@ class BooksCRUDService(CRUDService):
             .order_by(self.model.id)
         )
 
-    def before_entity_create(self, entity: M, session: AsyncSession) -> M:
-        entity.seller_id = 1
+    def before_entity_create(self, entity: M, session: AsyncSession, user: User) -> M:
+        entity.seller_id = user.id
         return entity

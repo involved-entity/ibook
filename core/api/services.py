@@ -5,6 +5,7 @@ from sqlalchemy import Select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database.models import Base
+from core.database.models import User
 
 M = typing.TypeVar("M", bound=Base)
 S = typing.TypeVar("S", bound=BaseModel)
@@ -23,14 +24,14 @@ class CRUDService:
         entites = await session.scalars(self.get_entities_default_query())
         return [self.schema_class.model_validate(entity).model_dump() for entity in entites]
 
-    async def create_entity(self, create_entity: C, session: AsyncSession) -> S:
+    async def create_entity(self, create_entity: C, session: AsyncSession, user: User) -> S:
         entity = self.model(**create_entity.model_dump())
-        entity = self.before_entity_create(entity, session)
+        entity = self.before_entity_create(entity, session, user)
         session.add(entity)
         await session.commit()
         stmt = self.get_entities_default_query().where(self.model.id == entity.id)
         book = await session.scalar(stmt)
         return self.schema_class.model_validate(book).model_dump()
 
-    def before_entity_create(self, entity: M, session: AsyncSession) -> M:  # noqa
+    def before_entity_create(self, entity: M, session: AsyncSession, user: User) -> M:
         return entity
