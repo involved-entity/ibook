@@ -1,7 +1,7 @@
 import typing
 
 from fastapi import APIRouter, Depends, status
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.api.books.schemas import BookCreateSchema, BookSchema
@@ -27,3 +27,13 @@ async def create_book(
 ) -> JSONResponse:
     book = await BooksCRUDService().create_entity(create_book_schema, session, user)
     return JSONResponse(book, status_code=status.HTTP_201_CREATED)
+
+
+@router.delete("/{book_id}")
+async def delete_book(
+    book_id: int,
+    session: typing.Annotated[AsyncSession, Depends(get_session)],
+    user: typing.Annotated[User, Depends(check_user_role(UserRole.SELLER))],
+) -> Response:
+    await BooksCRUDService().remove_entity(book_id, session, user)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
