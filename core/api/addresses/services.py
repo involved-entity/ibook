@@ -13,4 +13,4 @@ class AddressesCRUDService(CRUDService):
 
     admin_or_owner_to_edit = True
     save_user_id_before_create = True
-    binded_to_user = True
+    list_binded_to_user = True

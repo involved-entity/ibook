@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, Integer, Text, func
+from sqlalchemy import ForeignKey, Integer, Text, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core.database.models.base import Base
@@ -23,3 +23,5 @@ class Review(Base):
 
     user: Mapped["User"] = relationship(back_populates="reviews")
     book: Mapped["Book"] = relationship(back_populates="reviews")
+
+    __table_args__ = (UniqueConstraint("user_id", "book_id", name="uix_book_user"),)

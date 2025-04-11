@@ -3,6 +3,7 @@ import typing
 from fastapi import HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy import Select, select, update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database.models import Base, User
@@ -24,18 +25,19 @@ class CRUDService:
 
     admin_or_owner_to_edit: bool = False
     save_user_id_before_create: bool = False
-    binded_to_user: bool = False
+    list_binded_to_user: bool = False
 
     permission_denied_error: HTTPException = HTTPException(
         status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied."
     )
     not_found_error: HTTPException = HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found.")
+    create_entity_error: HTTPException = HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
 
     def get_entities_default_query(self) -> Select:
         return select(self.model).order_by(self.model.id)
 
     async def get_entities_list(self, session: AsyncSession, user: typing.Optional[User] = None) -> list[S]:
-        if self.binded_to_user:
+        if self.list_binded_to_user:
             entities = await session.scalars(
                 self.get_entities_default_query().where(getattr(self.model, self.user_field) == user.id)  # noqa
             )
@@ -46,9 +48,14 @@ class CRUDService:
 
     async def create_entity(self, create_entity: C, session: AsyncSession, user: User) -> S:
         entity = self.model(**create_entity.model_dump())
-        entity = self.before_entity_create(entity, user)
+        entity = await self.before_entity_create(entity, create_entity, user, session)
         session.add(entity)
-        await session.commit()
+
+        try:
+            await session.commit()
+        except IntegrityError:
+            raise self.create_entity_error
+
         entity = await self.after_entity_create(entity, create_entity, user, session)
         stmt = self.get_entities_default_query().where(self.model.id == entity.id)
         entity = await session.scalar(stmt)
@@ -74,6 +81,8 @@ class CRUDService:
 
     async def remove_entity(self, entity_id: int, session: AsyncSession, user: User) -> None:
         entity = await session.get(self.model, entity_id)
+        if not entity:
+            raise self.not_found_error
 
         entity = self.check_permissions_to_edit_entity(entity, user)
         await session.delete(entity)
@@ -87,7 +96,7 @@ class CRUDService:
 
         return entity
 
-    def before_entity_create(self, entity: M, user: User) -> M:
+    async def before_entity_create(self, entity: M, create_entity: C, user: User, session: AsyncSession) -> M:  # noqa
         if self.save_user_id_before_create:
             setattr(entity, self.user_field, user.id)
 
