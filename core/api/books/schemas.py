@@ -34,7 +34,7 @@ class BookSchema(BaseModel):
     updated_at: datetime
 
     seller: SellerSchema
-    categories: list[str]
+    categories: Any
     images: list[BookImageSchema]
 
     @classmethod

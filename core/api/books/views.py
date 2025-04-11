@@ -1,7 +1,7 @@
 import typing
 
 from fastapi import APIRouter, Depends, status
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import ORJSONResponse, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.api.books.schemas import BookCreateSchema, BookSchema
@@ -14,9 +14,9 @@ router = APIRouter(prefix="/books", tags=["Books API"])
 
 
 @router.get("/", response_model=list[BookSchema])
-async def get_books(session: typing.Annotated[AsyncSession, Depends(get_session)]) -> JSONResponse:
+async def get_books(session: typing.Annotated[AsyncSession, Depends(get_session)]) -> ORJSONResponse:
     books_list = await BooksCRUDService().get_entities_list(session)
-    return JSONResponse(books_list)
+    return ORJSONResponse(books_list)
 
 
 @router.post("/", response_model=BookSchema)
@@ -24,9 +24,9 @@ async def create_book(
     create_book_schema: BookCreateSchema,
     session: typing.Annotated[AsyncSession, Depends(get_session)],
     user: typing.Annotated[User, Depends(check_user_role(UserRole.SELLER))],
-) -> JSONResponse:
+) -> ORJSONResponse:
     book = await BooksCRUDService().create_entity(create_book_schema, session, user)
-    return JSONResponse(book, status_code=status.HTTP_201_CREATED)
+    return ORJSONResponse(book, status_code=status.HTTP_201_CREATED)
 
 
 @router.delete("/{book_id}")

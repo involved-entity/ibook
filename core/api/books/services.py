@@ -22,11 +22,11 @@ class BooksCRUDService(CRUDService):
         return (
             select(self.model)
             .options(
-                joinedload(self.model.seller), selectinload(self.model.order_items), selectinload(self.model.images)
+                joinedload(self.model.seller),
+                selectinload(self.model.order_items),
+                selectinload(self.model.images),
+                selectinload(self.model.categories).joinedload(BookCategory.category),
             )
-            .outerjoin(self.model.categories)
-            .outerjoin(BookCategory.category)
-            .add_columns(Category.name)
             .order_by(self.model.id)
         )
 
