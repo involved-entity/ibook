@@ -4,8 +4,7 @@ from pydantic import BaseModel
 from sqlalchemy import Select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.database.models import Base
-from core.database.models import User
+from core.database.models import Base, User
 
 M = typing.TypeVar("M", bound=Base)
 S = typing.TypeVar("S", bound=BaseModel)
