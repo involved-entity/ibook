@@ -32,5 +32,14 @@ class CRUDService:
         book = await session.scalar(stmt)
         return self.schema_class.model_validate(book).model_dump()
 
+    async def remove_entity(self, entity_id: int, session: AsyncSession, user: User) -> None:
+        entity = await session.get(self.model, entity_id)
+        entity = self.check_permissions_to_remove_entity(entity, user)
+        await session.delete(entity)
+        await session.commit()
+
+    def check_permissions_to_remove_entity(self, entity: M, user: User) -> M:  # noqa
+        return entity
+
     def before_entity_create(self, entity: M, session: AsyncSession, user: User) -> M:
         return entity
