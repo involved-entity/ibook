@@ -1,6 +1,5 @@
-import typing
 from datetime import datetime
-from typing import Any, Self
+from typing import Annotated, Any, Optional, Self
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -11,8 +10,8 @@ from core.api.users.schemas import SellerSchema
 class BookImageSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    url: str
-    is_main: bool
+    url: str = Field(examples=["https://example.com/book1.jpg"])
+    is_main: bool = Field(examples=[True, False])
 
 
 class BookCategorySchema(BaseModel):
@@ -21,21 +20,26 @@ class BookCategorySchema(BaseModel):
     category: CategorySchema
 
 
-class BookSchema(BaseModel):
+class BookBaseSchema(BaseModel):
+    title: str = Field(examples=["Clean Code"], max_length=100)
+    author: str = Field(examples=["Robert Martin"], max_length=50)
+    description: Optional[str] = Field(
+        default=None, examples=["A book about writing maintainable code"], max_length=1000
+    )
+    price: float = Field(examples=[29.99], gt=0)
+    publication_year: Optional[int] = Field(default=None, examples=[2008], le=datetime.now().year)
+    pages: Optional[int] = Field(default=None, examples=[464], gt=0)
+
+
+class BookSchema(BookBaseSchema):
     model_config = ConfigDict(from_attributes=True)
 
-    title: str
-    author: str
-    description: typing.Optional[str]
-    price: float
-    publication_year: typing.Optional[int]
-    pages: typing.Optional[int]
+    id: int
     created_at: datetime
     updated_at: datetime
-
     seller: SellerSchema
+    images: list[BookImageSchema] = Field(default_factory=list)
     categories: Any
-    images: list[BookImageSchema]
 
     @classmethod
     def model_validate(
@@ -48,26 +52,19 @@ class BookSchema(BaseModel):
         by_alias: bool | None = None,
         by_name: bool | None = None,
     ) -> Self:
-        book = super().model_validate(obj)
-        book.categories = [link.category.name for link in obj.categories]
-        return book
+        validated = super().model_validate(obj)
+        validated.categories = [link.category.name for link in obj.categories if hasattr(link, "category")]
+        return validated
 
 
-class BookCreateSchema(BaseModel):
-    title: str
-    author: str
-    description: typing.Optional[str] = None
-    price: float
-    publication_year: typing.Optional[int] = None
-    pages: typing.Optional[int] = None
-
-    categories: typing.Annotated[list[str], Field(exclude=True)]
+class BookCreateSchema(BookBaseSchema):
+    categories: Annotated[list[str], Field(examples=[["Programming", "Software-engineering"]], exclude=True)]
 
 
 class BookUpdateSchema(BaseModel):
-    price: typing.Optional[float] = None
-    description: typing.Optional[str] = None
-    author: typing.Optional[str] = None
-    title: typing.Optional[str] = None
-    publication_year: typing.Optional[int] = None
-    pages: typing.Optional[int] = None
+    title: Optional[str] = Field(default=None, examples=["Refactoring Improved"], max_length=100)
+    author: Optional[str] = Field(default=None, examples=["Martin Fowler"], max_length=50)
+    description: Optional[str] = Field(default=None, examples=["Updated edition of the classic book"], max_length=1000)
+    price: Optional[float] = Field(default=None, examples=[34.99], gt=0)
+    publication_year: Optional[int] = Field(default=None, examples=[2023], ge=1900, le=datetime.now().year)
+    pages: Optional[int] = Field(default=None, examples=[500], gt=0)
