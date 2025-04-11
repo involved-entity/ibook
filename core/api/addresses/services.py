@@ -1,4 +1,4 @@
-from core.api.addresses.schemas import AddressSchema, AddressSchemaCreate
+from core.api.addresses.schemas import AddressCreateSchema, AddressSchema, AddressUpdateSchema
 from core.api.services import CRUDService
 from core.database.models import Address
 
@@ -6,7 +6,8 @@ from core.database.models import Address
 class AddressesCRUDService(CRUDService):
     model = Address
     schema_class = AddressSchema
-    create_schema_class = AddressSchemaCreate
+    create_schema_class = AddressCreateSchema
+    update_schema_class = AddressUpdateSchema
 
     user_field = "user_id"
 

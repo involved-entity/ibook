@@ -75,9 +75,6 @@ class CRUDService:
     async def remove_entity(self, entity_id: int, session: AsyncSession, user: User) -> None:
         entity = await session.get(self.model, entity_id)
 
-        if self.binded_to_user and not (user.role == UserRole.ADMIN or getattr(entity, self.user_field) == user.id):
-            raise self.permission_denied_error
-
         entity = self.check_permissions_to_edit_entity(entity, user)
         await session.delete(entity)
         await session.commit()
