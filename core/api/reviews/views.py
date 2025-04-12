@@ -1,8 +1,8 @@
 from core.api.reviews.schemas import ReviewCreateSchema, ReviewSchema, ReviewUpdateSchema
 from core.api.reviews.services import ReviewsCRUDService
+from core.api.routers import CRUDRouter, CRUDRouterConfig
 from core.api.users.dependencies import check_user_role
 from core.database.models.user import UserRole
-from core.api.routers import CRUDRouter, CRUDRouterConfig
 
 config = CRUDRouterConfig(
     "/reviews",

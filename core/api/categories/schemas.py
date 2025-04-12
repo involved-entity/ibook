@@ -10,3 +10,7 @@ class CategoryCreateSchema(BaseModel):
 
 class CategorySchema(CategoryCreateSchema):
     id: int
+
+
+class CategoryUpdateSchema(BaseModel):
+    pass

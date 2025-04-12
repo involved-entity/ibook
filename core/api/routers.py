@@ -28,6 +28,7 @@ class CRUDRouterConfig:
         response_schema: Type[S],
         crud_service: CRUDService,
         user_dependencies_map: UserDependenciesMapType = None,
+        excluded_opts: Optional[list[UserDependenciesMethodsType]] = None,
     ):
         self.prefix = prefix
         self.tags = tags
@@ -36,6 +37,7 @@ class CRUDRouterConfig:
         self.response_schema = response_schema
         self.crud_service = crud_service
         self.user_dependencies_map = user_dependencies_map or {}
+        self.excluded_opts = excluded_opts or []
 
 
 class CRUDRouter:
@@ -62,40 +64,50 @@ class CRUDRouter:
         update_schema_class = self.config.update_schema
         response_schema_class = self.config.response_schema
 
-        @self.router.get("/", response_model=list[response_schema_class])
-        async def get_entities(
-            session: AsyncSession = Depends(get_session), user: User = Depends(list_user_dependency)
-        ) -> ORJSONResponse:
-            entities = await self.config.crud_service.get_entities_list(session, user)
-            return ORJSONResponse(entities)
+        if "list" not in self.config.excluded_opts:
 
-        @self.router.post("/", response_model=response_schema_class)
-        async def create_entity(
-            request: Request,
-            session: AsyncSession = Depends(get_session),
-            user: User = Depends(create_user_dependency),
-        ) -> ORJSONResponse:
-            create_schema = await self._get_schema_validated_request_data(request, create_schema_class)
-            entity = await self.config.crud_service.create_entity(create_schema, session, user)
-            return ORJSONResponse(entity, status_code=status.HTTP_201_CREATED)
+            @self.router.get("/", response_model=list[response_schema_class])
+            async def get_entities(
+                session: AsyncSession = Depends(get_session), user: User = Depends(list_user_dependency)
+            ) -> ORJSONResponse:
+                entities = await self.config.crud_service.get_entities_list(session, user)
+                return ORJSONResponse(entities)
 
-        @self.router.patch(
-            "/{entity_id}",
-            response_model=response_schema_class,
-        )
-        async def update_entity(
-            request: Request,
-            entity_id: int,
-            session: AsyncSession = Depends(get_session),
-            user: User = Depends(update_user_dependency),
-        ) -> ORJSONResponse:
-            update_schema = await self._get_schema_validated_request_data(request, update_schema_class)
-            entity = await self.config.crud_service.update_entity(entity_id, update_schema, session, user)
-            return ORJSONResponse(entity)
+        if "create" not in self.config.excluded_opts:
 
-        @self.router.delete("/{entity_id}", status_code=status.HTTP_204_NO_CONTENT)
-        async def delete_entity(
-            entity_id: int, session: AsyncSession = Depends(get_session), user: User = Depends(delete_user_dependency)
-        ) -> Response:
-            await self.config.crud_service.remove_entity(entity_id, session, user)
-            return Response(status_code=status.HTTP_204_NO_CONTENT)
+            @self.router.post("/", response_model=response_schema_class)
+            async def create_entity(
+                request: Request,
+                session: AsyncSession = Depends(get_session),
+                user: User = Depends(create_user_dependency),
+            ) -> ORJSONResponse:
+                create_schema = await self._get_schema_validated_request_data(request, create_schema_class)
+                entity = await self.config.crud_service.create_entity(create_schema, session, user)
+                return ORJSONResponse(entity, status_code=status.HTTP_201_CREATED)
+
+        if "update" not in self.config.excluded_opts:
+
+            @self.router.patch(
+                "/{entity_id}",
+                response_model=response_schema_class,
+            )
+            async def update_entity(
+                request: Request,
+                entity_id: int,
+                session: AsyncSession = Depends(get_session),
+                user: User = Depends(update_user_dependency),
+            ) -> ORJSONResponse:
+                update_schema = await self._get_schema_validated_request_data(request, update_schema_class)
+                entity = await self.config.crud_service.update_entity(entity_id, update_schema, session, user)
+                return ORJSONResponse(entity)
+
+        if "delete" not in self.config.excluded_opts:
+
+            @self.router.delete("/{entity_id}", status_code=status.HTTP_204_NO_CONTENT)
+            async def delete_entity(
+                entity_id: int,
+                session: AsyncSession = Depends(get_session),
+                user: User = Depends(delete_user_dependency),
+            ) -> Response:
+                await self.config.crud_service.remove_entity(entity_id, session, user)
+                return Response(status_code=status.HTTP_204_NO_CONTENT)
