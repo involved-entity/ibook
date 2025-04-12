@@ -26,6 +26,7 @@ class CRUDService:
     admin_or_owner_to_edit: bool = False
     save_user_id_before_create: bool = False
     list_binded_to_user: bool = False
+    use_custom_remove: bool = False
 
     permission_denied_error: HTTPException = HTTPException(
         status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied."
@@ -46,9 +47,9 @@ class CRUDService:
 
         return [self.schema_class.model_validate(entity).model_dump() for entity in entities]
 
-    async def create_entity(self, create_entity: C, session: AsyncSession, user: User) -> S:
-        entity = self.model(**create_entity.model_dump())
-        entity = await self.before_entity_create(entity, create_entity, user, session)
+    async def create_entity(self, create_entity_data: C, session: AsyncSession, user: User) -> S:
+        entity = self.model(**create_entity_data.model_dump())
+        entity = await self.before_entity_create(entity, create_entity_data, user, session)
         session.add(entity)
 
         try:
@@ -56,7 +57,7 @@ class CRUDService:
         except IntegrityError:
             raise self.create_entity_error
 
-        entity = await self.after_entity_create(entity, create_entity, user, session)
+        entity = await self.after_entity_create(entity, create_entity_data, user, session)
         stmt = self.get_entities_default_query().where(self.model.id == entity.id)
         entity = await session.scalar(stmt)
         return self.schema_class.model_validate(entity).model_dump()
@@ -68,8 +69,9 @@ class CRUDService:
             raise self.not_found_error
 
         entity = self.check_permissions_to_edit_entity(entity, user)
+        entity = await self.before_entity_update(entity, update_entity_data, user, session)
 
-        update_values = update_entity_data.model_dump(exclude_unset=True)
+        update_values = update_entity_data.model_dump(exclude_unset=True, exclude_none=True)
 
         await session.execute(update(self.model).where(self.model.id == entity_id).values(**update_values))
         await session.commit()
@@ -85,6 +87,10 @@ class CRUDService:
             raise self.not_found_error
 
         entity = self.check_permissions_to_edit_entity(entity, user)
+
+        if self.use_custom_remove:
+            return await self.custom_remove(entity, session)
+
         await session.delete(entity)
         await session.commit()
 
@@ -104,3 +110,9 @@ class CRUDService:
 
     async def after_entity_create(self, entity: M, create_entity: C, user: User, session: AsyncSession) -> M:
         return entity
+
+    async def before_entity_update(self, entity: M, update_entity: U, user: User, session: AsyncSession) -> M:  # noqa
+        return entity
+
+    async def custom_remove(self, entity: M, session: AsyncSession) -> None:
+        raise NotImplementedError()

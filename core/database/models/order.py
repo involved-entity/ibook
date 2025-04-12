@@ -15,18 +15,18 @@ if TYPE_CHECKING:
 
 
 class OrderStatus(Enum):
-    CREATED = "created"
-    PAID = "paid"
-    IN_PROGRESS = "in_progress"
-    DELIVERED = "delivered"
-    CANCELLED = "cancelled"
+    CREATED = "CREATED"
+    PAID = "PAID"
+    IN_PROGRESS = "IN_PROGRESS"
+    DELIVERED = "DELIVERED"
+    CANCELLED = "CANCELLED"
 
 
 class Order(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     address_id: Mapped[int] = mapped_column(ForeignKey("addresses.id"))
     status: Mapped[OrderStatus] = mapped_column(SQLEnum(OrderStatus), default=OrderStatus.CREATED)
-    total_amount: Mapped[float] = mapped_column(Numeric(10, 2))
+    total_amount: Mapped[float] = mapped_column(Numeric(10, 2), default=0)
     created_at: Mapped[datetime] = mapped_column(
         server_default=func.now(), default=lambda: datetime.now(UTC).replace(tzinfo=None)
     )
@@ -41,4 +41,4 @@ class Order(Base):
     user: Mapped["User"] = relationship(back_populates="orders")
     address: Mapped["Address"] = relationship(back_populates="orders")
     items: Mapped[list["OrderItem"]] = relationship(back_populates="order")
-    payments: Mapped[list["Payment"]] = relationship(back_populates="order")
+    payment: Mapped["Payment"] = relationship(back_populates="order")

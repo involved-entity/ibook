@@ -21,4 +21,4 @@ class Payment(Base):
         server_default=func.now(), default=lambda: datetime.now(UTC).replace(tzinfo=None)
     )
 
-    order: Mapped["Order"] = relationship(back_populates="payments")
+    order: Mapped["Order"] = relationship(back_populates="payment")
