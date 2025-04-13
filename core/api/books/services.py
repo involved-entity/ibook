@@ -1,3 +1,4 @@
+import typing
 import uuid
 from pathlib import Path
 
@@ -26,8 +27,8 @@ class BooksCRUDService(CRUDService):
     admin_or_owner_to_edit = True
     save_user_id_before_create = True
 
-    def get_entities_default_query(self) -> Select:
-        return (
+    def get_entities_default_query(self, query: typing.Optional[dict] = None) -> Select:
+        stmt = (
             select(self.model)
             .options(
                 joinedload(self.model.seller),
@@ -37,6 +38,15 @@ class BooksCRUDService(CRUDService):
             )
             .order_by(self.model.id)
         )
+
+        if query.get("author"):
+            stmt = stmt.filter(self.model.author.ilike(f"%{query['author']}%"))
+        if query.get("title"):
+            stmt = stmt.filter(self.model.title.ilike(f"%{query['title']}%"))
+        if query.get("seller_id") and query["seller_id"].isnumeric():
+            stmt = stmt.where(self.model.seller_id == int(query["seller_id"]))
+
+        return stmt
 
     async def after_entity_create(self, entity: M, create_entity: C, user: User, session: AsyncSession) -> M:
         if create_entity.categories:

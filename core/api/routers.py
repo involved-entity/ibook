@@ -54,6 +54,9 @@ class CRUDRouter:
         adapter = TypeAdapter(schema_class)
         return adapter.validate_python(data)
 
+    def get_query_params(self, request: Request) -> dict:  # noqa
+        return dict(request.query_params)
+
     def _setup_routes(self):
         list_user_dependency = self._get_user_dependency("list")
         create_user_dependency = self._get_user_dependency("create")
@@ -68,9 +71,11 @@ class CRUDRouter:
 
             @self.router.get("/", response_model=list[response_schema_class])
             async def get_entities(
-                session: AsyncSession = Depends(get_session), user: User = Depends(list_user_dependency)
+                session: AsyncSession = Depends(get_session),
+                user: User = Depends(list_user_dependency),
+                query: dict = Depends(self.get_query_params),
             ) -> ORJSONResponse:
-                entities = await self.config.crud_service.get_entities_list(session, user)
+                entities = await self.config.crud_service.get_entities_list(session, query, user)
                 return ORJSONResponse(entities)
 
         if "create" not in self.config.excluded_opts:

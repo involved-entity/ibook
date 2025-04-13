@@ -34,16 +34,18 @@ class CRUDService:
     not_found_error: HTTPException = HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found.")
     create_entity_error: HTTPException = HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
 
-    def get_entities_default_query(self) -> Select:
+    def get_entities_default_query(self, query: typing.Optional[dict] = None) -> Select:
         return select(self.model).order_by(self.model.id)
 
-    async def get_entities_list(self, session: AsyncSession, user: typing.Optional[User] = None) -> list[S]:
+    async def get_entities_list(
+        self, session: AsyncSession, query: dict, user: typing.Optional[User] = None
+    ) -> list[S]:
         if self.list_binded_to_user:
             entities = await session.scalars(
-                self.get_entities_default_query().where(getattr(self.model, self.user_field) == user.id)  # noqa
+                self.get_entities_default_query(query).where(getattr(self.model, self.user_field) == user.id)  # noqa
             )
         else:
-            entities = await session.scalars(self.get_entities_default_query())
+            entities = await session.scalars(self.get_entities_default_query(query))
 
         return [self.schema_class.model_validate(entity).model_dump() for entity in entities]
 

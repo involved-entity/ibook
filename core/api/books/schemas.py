@@ -5,7 +5,7 @@ from fastapi import UploadFile
 from pydantic import BaseModel, ConfigDict, Field
 
 from core.api.categories.schemas import CategorySchema
-from core.api.users.sellers.schemas import SellerSchema
+from core.api.users.sellers.schemas import SellerSimplyfiedSchema
 
 
 class BookImageSchema(BaseModel):
@@ -38,7 +38,7 @@ class BookSchema(BookBaseSchema):
     id: int
     created_at: datetime
     updated_at: datetime
-    seller: SellerSchema
+    seller: SellerSimplyfiedSchema
     images: list[BookImageSchema] = Field(default_factory=list)
     categories: Any
 

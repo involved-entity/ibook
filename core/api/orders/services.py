@@ -1,3 +1,5 @@
+import typing
+
 from fastapi import HTTPException, status
 from sqlalchemy import Select, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -25,7 +27,7 @@ class OrdersCRUDService(CRUDService):
 
     create_entity_error = HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Address not found.")
 
-    def get_entities_default_query(self) -> Select:
+    def get_entities_default_query(self, query: typing.Optional[dict] = None) -> Select:
         return (
             select(self.model)
             .options(
