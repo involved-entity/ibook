@@ -4,7 +4,7 @@ from typing import Annotated, Any, Optional, Self
 from pydantic import BaseModel, ConfigDict, Field
 
 from core.api.categories.schemas import CategorySchema
-from core.api.users.schemas import SellerSchema
+from core.api.users.sellers.schemas import SellerSchema
 
 
 class BookImageSchema(BaseModel):
