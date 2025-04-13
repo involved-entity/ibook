@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Annotated, Any, Optional, Self
 
+from fastapi import UploadFile
 from pydantic import BaseModel, ConfigDict, Field
 
 from core.api.categories.schemas import CategorySchema
@@ -57,8 +58,14 @@ class BookSchema(BookBaseSchema):
         return validated
 
 
+class BookImageCreateSchema(BaseModel):
+    file: UploadFile
+    is_main: bool = False
+
+
 class BookCreateSchema(BookBaseSchema):
     categories: Annotated[list[str], Field(examples=[["Programming", "Software-engineering"]], exclude=True)]
+    images: list[BookImageCreateSchema] = Field(default_factory=list)
 
 
 class BookUpdateSchema(BaseModel):
