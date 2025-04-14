@@ -3,12 +3,15 @@ import typing
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class OrderItemsCreateSchema(BaseModel):
+class OrderItemsCreateWithoutOrderIDSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    order_id: typing.Annotated[int, Field(gt=0)]
     book_id: typing.Annotated[int, Field(gt=0)]
     quantity: typing.Annotated[int, Field(gt=0, default=1)] = 1
+
+
+class OrderItemsCreateSchema(OrderItemsCreateWithoutOrderIDSchema):
+    order_id: typing.Annotated[int, Field(gt=0)]
 
 
 class OrderItemsSchema(OrderItemsCreateSchema):

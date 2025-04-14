@@ -36,7 +36,6 @@ class OrderItemsCRUDService(CRUDService):
         return order
 
     async def check_permissions_to_edit_entity(self, entity: M, user: User, session: AsyncSession) -> M:
-        # TODO: test order items logic, add order items creation in order create
         await self._check_perms_to_order(entity.order_id, user, session)
 
         return entity

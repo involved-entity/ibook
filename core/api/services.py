@@ -28,6 +28,8 @@ class CRUDService:
     list_binded_to_user: bool = False
     use_custom_remove: bool = False
 
+    create_model_dump_exclude: set[str] | None = None
+
     permission_denied_error: HTTPException = HTTPException(
         status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied."
     )
@@ -50,7 +52,7 @@ class CRUDService:
         return [self.schema_class.model_validate(entity).model_dump() for entity in entities]
 
     async def create_entity(self, create_entity_data: C, session: AsyncSession, user: User) -> S:
-        entity = self.model(**create_entity_data.model_dump())
+        entity = self.model(**create_entity_data.model_dump(exclude=self.create_model_dump_exclude))
         entity = await self.before_entity_create(entity, create_entity_data, user, session)
         session.add(entity)
 

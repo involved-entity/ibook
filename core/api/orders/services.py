@@ -7,7 +7,7 @@ from sqlalchemy.orm import joinedload, selectinload
 
 from core.api.orders.schemas import OrderCreateSchema, OrderSchema, OrderUpdateSchema
 from core.api.services import C, CRUDService, M, U
-from core.database.models import Address, Order, User
+from core.database.models import Address, Book, Order, OrderItem, User
 from core.database.models.order import OrderStatus
 from core.database.models.user import UserRole
 
@@ -24,6 +24,8 @@ class OrdersCRUDService(CRUDService):
     save_user_id_before_create = True
     list_binded_to_user = True
     use_custom_remove = True
+
+    create_model_dump_exclude = {"items"}
 
     create_entity_error = HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Address not found.")
 
@@ -48,6 +50,27 @@ class OrdersCRUDService(CRUDService):
 
         if not await self._check_address_perms(create_entity.address_id, user, session):
             raise self.permission_denied_error
+
+        return entity
+
+    async def after_entity_create(self, entity: M, create_entity: C, user: User, session: AsyncSession) -> M:
+        if create_entity.model_dump(include={"items"}).get("items"):
+            items = create_entity.model_dump(include={"items"})["items"]
+            stmt = select(Book).where(Book.id.in_(item["book_id"] for item in items))
+            books = await session.scalars(stmt)
+
+            for order_item in items:
+                book_tuple = tuple(filter(lambda x: x.id == order_item["book_id"], books))
+
+                if len(book_tuple):
+                    item = OrderItem(
+                        order_id=entity.id,  # noqa
+                        price=book_tuple[0].price,
+                        **order_item,
+                    )
+                    session.add(item)
+
+            await session.commit()
 
         return entity
 
