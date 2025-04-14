@@ -1,7 +1,4 @@
-import typing
-
 from fastapi import HTTPException, status
-from sqlalchemy import Select, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.api.order_items.schemas import OrderItemsCreateSchema, OrderItemsSchema, OrderItemsUpdateSchema
@@ -19,9 +16,6 @@ class OrderItemsCRUDService(CRUDService):
 
     create_entity_error = HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order or book not found.")
     not_found_error = HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Order is cancelled.")
-
-    def get_entities_default_query(self, query: typing.Optional[dict] = None) -> Select:
-        return select(self.model).outerjoin(self.model.order).order_by(self.model.id)
 
     async def _check_perms_to_order(self, order_id: int, user: User, session: AsyncSession) -> Order | None:  # noqa
         order = await session.get(Order, order_id)

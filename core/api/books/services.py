@@ -1,20 +1,14 @@
 import typing
-import uuid
-from pathlib import Path
 
-import aiofiles
-from fastapi import UploadFile
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 from sqlalchemy.sql.selectable import Select
 
+from core.api.book_images.services import save_uploaded_book_image
 from core.api.books.schemas import BookCreateSchema, BookSchema
 from core.api.services import C, CRUDService, M
-from core.config import settings
-from core.database.models import Book, BookCategory, BookImage, Category, User
-
-UPLOAD_DIR = Path(settings.upload_book_images_dir)
+from core.database.models import Book, BookCategory, Category, User
 
 
 class BooksCRUDService(CRUDService):
@@ -61,28 +55,9 @@ class BooksCRUDService(CRUDService):
 
         if create_entity.images:
             for img_data in create_entity.images:
-                filename = await self._save_uploaded_file(img_data.file)
-
-                book_image = BookImage(
-                    book_id=entity.id,  # noqa
-                    url=filename,
-                    is_main=img_data.is_main,
-                )
+                book_image = await save_uploaded_book_image(img_data.file, entity.id, img_data.is_main)  # noqa
                 session.add(book_image)
 
             await session.commit()
 
         return entity
-
-    async def _save_uploaded_file(self, file: UploadFile) -> str:  # noqa
-        file_ext = file.filename.split(".")[-1]
-        filename = f"{uuid.uuid4()}.{file_ext}"
-
-        UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-
-        file_path = UPLOAD_DIR / filename
-        async with aiofiles.open(file_path, "wb") as f:
-            while chunk := await file.read(1024):
-                await f.write(chunk)
-
-        return str(filename)

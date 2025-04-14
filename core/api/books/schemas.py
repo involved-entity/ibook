@@ -1,18 +1,11 @@
 from datetime import datetime
 from typing import Annotated, Any, Optional, Self
 
-from fastapi import UploadFile
 from pydantic import BaseModel, ConfigDict, Field
 
+from core.api.book_images.schemas import BookImageSchema, BookImageSimplyfiedCreateSchema
 from core.api.categories.schemas import CategorySchema
 from core.api.users.sellers.schemas import SellerSimplyfiedSchema
-
-
-class BookImageSchema(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    url: str = Field(examples=["https://example.com/book1.jpg"])
-    is_main: bool = Field(examples=[True, False])
 
 
 class BookCategorySchema(BaseModel):
@@ -58,14 +51,9 @@ class BookSchema(BookBaseSchema):
         return validated
 
 
-class BookImageCreateSchema(BaseModel):
-    file: UploadFile
-    is_main: bool = False
-
-
 class BookCreateSchema(BookBaseSchema):
     categories: Annotated[list[str], Field(examples=[["Programming", "Software-engineering"]], exclude=True)]
-    images: list[BookImageCreateSchema] = Field(default_factory=list)
+    images: list[BookImageSimplyfiedCreateSchema] = Field(default_factory=list)
 
 
 class BookUpdateSchema(BaseModel):

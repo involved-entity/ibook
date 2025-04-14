@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Literal, Optional, Type
+from typing import TYPE_CHECKING, Callable, Literal, Optional, Sequence, Type
 
 from fastapi import APIRouter, Depends, status
 from fastapi.responses import ORJSONResponse, Response
@@ -28,7 +28,7 @@ class CRUDRouterConfig:
         response_schema: Type[S],
         crud_service: CRUDService,
         user_dependencies_map: UserDependenciesMapType = None,
-        excluded_opts: Optional[list[UserDependenciesMethodsType]] = None,
+        excluded_opts: Optional[Sequence[UserDependenciesMethodsType]] = None,
     ):
         self.prefix = prefix
         self.tags = tags
@@ -37,7 +37,7 @@ class CRUDRouterConfig:
         self.response_schema = response_schema
         self.crud_service = crud_service
         self.user_dependencies_map = user_dependencies_map or {}
-        self.excluded_opts = excluded_opts or []
+        self.excluded_opts = excluded_opts or tuple()
 
 
 class CRUDRouter:
