@@ -7,3 +7,5 @@ class CategoriesCRUDService(CRUDService):
     model = Category
     schema_class = CategorySchema
     create_schema_class = CategoryCreateSchema
+
+    list_pagination = False

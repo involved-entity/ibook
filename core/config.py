@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     upload_book_images_dir: str = "uploads"
     upload_book_images_url: str = "/uploads"
 
+    pagination_page_size: int = 50
+
     class Config:
         env_file = ".env"
         extra = "allow"

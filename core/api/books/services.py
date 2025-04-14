@@ -30,7 +30,7 @@ class BooksCRUDService(CRUDService):
                 selectinload(self.model.images),
                 selectinload(self.model.categories).joinedload(BookCategory.category),
             )
-            .order_by(self.model.id)
+            .order_by(self.model.id.desc())
         )
 
         if query and query.get("author"):

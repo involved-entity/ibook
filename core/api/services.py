@@ -2,10 +2,12 @@ import typing
 
 from fastapi import HTTPException, status
 from pydantic import BaseModel
-from sqlalchemy import Select, select, update
+from sqlalchemy import Select, func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from core.api.schemas import ListPaginatedResponse
+from core.config import settings
 from core.database.models import Base, User
 from core.database.models.user import UserRole
 
@@ -29,6 +31,8 @@ class CRUDService:
     retrieve_owner_only: bool = False
     use_custom_remove: bool = False
 
+    list_pagination: bool = True
+
     create_model_dump_exclude: set[str] | None = None
 
     permission_denied_error: HTTPException = HTTPException(
@@ -38,7 +42,7 @@ class CRUDService:
     create_entity_error: HTTPException = HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
 
     def get_entities_default_query(self, query: typing.Optional[dict] = None) -> Select:
-        return select(self.model).order_by(self.model.id)
+        return select(self.model).order_by(self.model.id.desc())
 
     async def get_entity_retrieve(self, query: Select, session: AsyncSession) -> M:
         result = await session.execute(query)
@@ -50,15 +54,30 @@ class CRUDService:
 
     async def get_entities_list(
         self, session: AsyncSession, query: dict, user: typing.Optional[User] = None
-    ) -> list[S]:
+    ) -> dict[str, typing.Any]:
         if self.list_owner_only:
-            entities = await session.scalars(
+            stmt = (
                 self.get_entities_default_query(query).where(getattr(self.model, self.user_field) == user.id)  # noqa
             )
         else:
-            entities = await session.scalars(self.get_entities_default_query(query))
+            stmt = self.get_entities_default_query(query)
 
-        return [self.schema_class.model_validate(entity).model_dump() for entity in entities]
+        if self.list_pagination and query.get("page") and query["page"].isnumeric():
+            stmt = stmt.offset((int(query["page"]) - 1) * settings.pagination_page_size).limit(
+                settings.pagination_page_size
+            )
+
+        total = await session.scalar(func.count(self.model.id))
+        entities = await session.scalars(stmt)
+        pages = (
+            (total + settings.pagination_page_size - 1) // settings.pagination_page_size
+            if self.list_pagination
+            else None
+        )
+
+        return ListPaginatedResponse[self.schema_class](
+            items=[self.schema_class.model_validate(entity) for entity in entities], total=total, pages=pages
+        ).model_dump()
 
     async def retrieve_entity(self, entity_id: int, session: AsyncSession, user: User) -> S:
         entity = await self.get_entity_retrieve(
