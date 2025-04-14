@@ -4,6 +4,7 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field
 
 from core.api.addresses.schemas import AddressSchema
+from core.api.order_items.schemas import OrderItemsSchema
 from core.database.models.order import OrderStatus
 
 
@@ -20,7 +21,7 @@ class OrderSchema(OrderCreateSchema):
     total_amount: float
     tracking_number: str | None = None
     address: AddressSchema
-    items: list | None = None
+    items: list[OrderItemsSchema] | None = None
     payment: list | None = None
     id: int
 

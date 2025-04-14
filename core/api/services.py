@@ -70,13 +70,14 @@ class CRUDService:
         if not entity:
             raise self.not_found_error
 
-        entity = self.check_permissions_to_edit_entity(entity, user)
+        entity = await self.check_permissions_to_edit_entity(entity, user, session)
         entity = await self.before_entity_update(entity, update_entity_data, user, session)
 
         update_values = update_entity_data.model_dump(exclude_unset=True, exclude_none=True)
 
-        await session.execute(update(self.model).where(self.model.id == entity_id).values(**update_values))
-        await session.commit()
+        if update_values:
+            await session.execute(update(self.model).where(self.model.id == entity_id).values(**update_values))
+            await session.commit()
 
         stmt = self.get_entities_default_query().where(self.model.id == entity.id)
         entity = await session.scalar(stmt)
@@ -88,7 +89,7 @@ class CRUDService:
         if not entity:
             raise self.not_found_error
 
-        entity = self.check_permissions_to_edit_entity(entity, user)
+        entity = await self.check_permissions_to_edit_entity(entity, user, session)
 
         if self.use_custom_remove:
             return await self.custom_remove(entity, session)
@@ -96,7 +97,7 @@ class CRUDService:
         await session.delete(entity)
         await session.commit()
 
-    def check_permissions_to_edit_entity(self, entity: M, user: User) -> M:  # noqa
+    async def check_permissions_to_edit_entity(self, entity: M, user: User, session: AsyncSession) -> M:  # noqa
         if self.admin_or_owner_to_edit and not (
             user.role == UserRole.ADMIN or user.id == getattr(entity, self.user_field)
         ):

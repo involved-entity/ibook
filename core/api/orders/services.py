@@ -35,6 +35,7 @@ class OrdersCRUDService(CRUDService):
                 joinedload(self.model.payment),
                 selectinload(self.model.items),
             )
+            .filter(self.model.status != OrderStatus.CANCELLED)
             .order_by(self.model.id)
         )
 
