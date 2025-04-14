@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Account verification</title>
+</head>
+<body>
+    <h1>Hello {{ user.email }}!</h1>
+    <p>You requested an account verification. Please click the link below:</p>
+    <a href="{{ reset_url }}">Reset Password</a>
+    <p>If you didn't request this, please ignore this email.</p>
+</body>
+</html>
