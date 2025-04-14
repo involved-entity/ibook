@@ -22,7 +22,8 @@ class OrdersCRUDService(CRUDService):
 
     admin_or_owner_to_edit = True
     save_user_id_before_create = True
-    list_binded_to_user = True
+    list_owner_only = True
+    retrieve_owner_only = True
     use_custom_remove = True
 
     create_model_dump_exclude = {"items"}

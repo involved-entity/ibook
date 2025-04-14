@@ -13,6 +13,7 @@ config = CRUDRouterConfig(
     OrdersCRUDService(),
     {
         "list": check_user_role(UserRole.CUSTOMER),
+        "retrieve": check_user_role(UserRole.CUSTOMER),
         "create": check_user_role(UserRole.CUSTOMER),
         "update": check_user_role(UserRole.CUSTOMER),
         "delete": check_user_role(UserRole.CUSTOMER),

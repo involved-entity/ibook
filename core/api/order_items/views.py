@@ -16,7 +16,7 @@ config = CRUDRouterConfig(
         "update": check_user_role(UserRole.CUSTOMER),
         "delete": check_user_role(UserRole.CUSTOMER),
     },
-    excluded_opts=["list"],
+    excluded_opts=["retrieve", "list"],
 )
 
 crud_router = CRUDRouter(config)

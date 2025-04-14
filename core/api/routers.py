@@ -14,7 +14,9 @@ from core.database.models.user import User
 if TYPE_CHECKING:
     from core.api.services import C, CRUDService, S, U
 
-UserDependenciesMethodsType = Literal["list"] | Literal["create"] | Literal["update"] | Literal["delete"]
+UserDependenciesMethodsType = (
+    Literal["list"] | Literal["create"] | Literal["update"] | Literal["delete"] | Literal["retrieve"]
+)
 UserDependenciesMapType = Optional[dict[UserDependenciesMethodsType, Callable]]
 
 
@@ -59,6 +61,7 @@ class CRUDRouter:
 
     def _setup_routes(self):
         list_user_dependency = self._get_user_dependency("list")
+        retrieve_user_dependency = self._get_user_dependency("retrieve")
         create_user_dependency = self._get_user_dependency("create")
         update_user_dependency = self._get_user_dependency("update")
         delete_user_dependency = self._get_user_dependency("delete")
@@ -77,6 +80,17 @@ class CRUDRouter:
             ) -> ORJSONResponse:
                 entities = await self.config.crud_service.get_entities_list(session, query, user)
                 return ORJSONResponse(entities)
+
+        if "retrieve" not in self.config.excluded_opts:
+
+            @self.router.get("/{entity_id}", response_model=list[response_schema_class])
+            async def retrieve_entity(
+                entity_id: int,
+                session: AsyncSession = Depends(get_session),
+                user: User = Depends(retrieve_user_dependency),
+            ) -> ORJSONResponse:
+                entity = await self.config.crud_service.retrieve_entity(entity_id, session, user)
+                return ORJSONResponse(entity)
 
         if "create" not in self.config.excluded_opts:
 

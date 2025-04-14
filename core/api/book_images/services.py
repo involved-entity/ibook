@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.api.book_images.schemas import BookImageCreateSchema, BookImageSchema, BookImageUpdateSchema
 from core.api.services import C, CRUDService, M
 from core.config import settings
-from core.database.models import Book, BookImage, User
+from core.database.models import Book, BookImage, Order, User
 from core.database.models.user import UserRole
 
 UPLOAD_DIR = Path(settings.upload_book_images_dir)

@@ -33,11 +33,11 @@ class BooksCRUDService(CRUDService):
             .order_by(self.model.id)
         )
 
-        if query.get("author"):
+        if query and query.get("author"):
             stmt = stmt.filter(self.model.author.ilike(f"%{query['author']}%"))
-        if query.get("title"):
+        if query and query.get("title"):
             stmt = stmt.filter(self.model.title.ilike(f"%{query['title']}%"))
-        if query.get("seller_id") and query["seller_id"].isnumeric():
+        if query and query.get("seller_id") and query["seller_id"].isnumeric():
             stmt = stmt.where(self.model.seller_id == int(query["seller_id"]))
 
         return stmt

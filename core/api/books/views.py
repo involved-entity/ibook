@@ -13,6 +13,7 @@ config = CRUDRouterConfig(
     BooksCRUDService(),
     {
         "list": check_user_role(UserRole.CUSTOMER, UserRole.SELLER),
+        "retrieve": check_user_role(UserRole.CUSTOMER, UserRole.SELLER),
         "create": check_user_role(UserRole.SELLER),
         "update": check_user_role(UserRole.SELLER),
         "delete": check_user_role(UserRole.SELLER),

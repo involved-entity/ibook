@@ -25,7 +25,8 @@ class CRUDService:
 
     admin_or_owner_to_edit: bool = False
     save_user_id_before_create: bool = False
-    list_binded_to_user: bool = False
+    list_owner_only: bool = False
+    retrieve_owner_only: bool = False
     use_custom_remove: bool = False
 
     create_model_dump_exclude: set[str] | None = None
@@ -39,10 +40,18 @@ class CRUDService:
     def get_entities_default_query(self, query: typing.Optional[dict] = None) -> Select:
         return select(self.model).order_by(self.model.id)
 
+    async def get_entity_retrieve(self, query: Select, session: AsyncSession) -> M:
+        result = await session.execute(query)
+        entity = result.scalar_one_or_none()
+        if not entity:
+            raise self.not_found_error
+
+        return entity
+
     async def get_entities_list(
         self, session: AsyncSession, query: dict, user: typing.Optional[User] = None
     ) -> list[S]:
-        if self.list_binded_to_user:
+        if self.list_owner_only:
             entities = await session.scalars(
                 self.get_entities_default_query(query).where(getattr(self.model, self.user_field) == user.id)  # noqa
             )
@@ -50,6 +59,20 @@ class CRUDService:
             entities = await session.scalars(self.get_entities_default_query(query))
 
         return [self.schema_class.model_validate(entity).model_dump() for entity in entities]
+
+    async def retrieve_entity(self, entity_id: int, session: AsyncSession, user: User) -> S:
+        entity = await self.get_entity_retrieve(
+            self.get_entities_default_query().filter(self.model.id == entity_id), session
+        )
+        entity = self.check_permissions_to_retrieve_entity(entity, user)
+
+        return self.schema_class.model_validate(entity).model_dump()
+
+    def check_permissions_to_retrieve_entity(self, entity: M, user: User) -> M:
+        if self.retrieve_owner_only and user not in (UserRole.ADMIN,) and user.id != getattr(entity, self.user_field):
+            raise self.permission_denied_error
+
+        return entity
 
     async def create_entity(self, create_entity_data: C, session: AsyncSession, user: User) -> S:
         entity = self.model(**create_entity_data.model_dump(exclude=self.create_model_dump_exclude))
@@ -67,10 +90,7 @@ class CRUDService:
         return self.schema_class.model_validate(entity).model_dump()
 
     async def update_entity(self, entity_id: int, update_entity_data: U, session: AsyncSession, user: User) -> S:
-        result = await session.execute(select(self.model).filter(self.model.id == entity_id))
-        entity = result.scalar_one_or_none()
-        if not entity:
-            raise self.not_found_error
+        entity = await self.get_entity_retrieve(select(self.model).filter(self.model.id == entity_id), session)
 
         entity = await self.check_permissions_to_edit_entity(entity, user, session)
         entity = await self.before_entity_update(entity, update_entity_data, user, session)

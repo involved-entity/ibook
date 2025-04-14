@@ -15,7 +15,7 @@ router = APIRouter(prefix="/sellers", tags=["Sellers API"])
 async def get_seller_info(
     seller_id: int,
     session: AsyncSession = Depends(get_session),
-    user: User = Depends(check_user_role(UserRole.SELLER, UserRole.CUSTOMER)),
+    user: User = Depends(check_user_role(UserRole.SELLER, UserRole.CUSTOMER)),  # noqa
 ) -> ORJSONResponse:
     seller = await get_seller_data(seller_id, session)
     return ORJSONResponse(seller)
