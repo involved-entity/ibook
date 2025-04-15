@@ -32,6 +32,7 @@ class CRUDService:
     use_custom_remove: bool = False
 
     list_pagination: bool = True
+    commit_before_after_create_hook: bool = True
 
     create_model_dump_exclude: set[str] | None = None
 
@@ -98,10 +99,12 @@ class CRUDService:
         entity = await self.before_entity_create(entity, create_entity_data, user, session)
         session.add(entity)
 
-        try:
-            await session.commit()
-        except IntegrityError:
-            raise self.create_entity_error
+        if self.commit_before_after_create_hook:
+            try:
+                await session.commit()
+            except IntegrityError:
+                await session.rollback()
+                raise self.create_entity_error
 
         entity = await self.after_entity_create(entity, create_entity_data, user, session)
         stmt = self.get_entities_default_query().where(self.model.id == entity.id)

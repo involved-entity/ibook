@@ -6,7 +6,7 @@ from sqlalchemy.orm import joinedload, selectinload
 from sqlalchemy.sql.selectable import Select
 
 from core.api.book_images.services import save_uploaded_book_image
-from core.api.books.schemas import BookCreateSchema, BookSchema
+from core.api.books.schemas import BookCreateSchema, BookSchema, BookUpdateSchema
 from core.api.services import C, CRUDService, M
 from core.database.models import Book, BookCategory, Category, User
 
@@ -15,6 +15,7 @@ class BooksCRUDService(CRUDService):
     model = Book
     schema_class = BookSchema
     create_schema_class = BookCreateSchema
+    update_schema_class = BookUpdateSchema
 
     user_field = "seller_id"
 
@@ -44,20 +45,28 @@ class BooksCRUDService(CRUDService):
 
     async def after_entity_create(self, entity: M, create_entity: C, user: User, session: AsyncSession) -> M:
         if create_entity.categories:
-            stmt = select(Category).where(Category.name.in_(create_entity.categories))
-            existing_categories = await session.scalars(stmt)
+            try:
+                stmt = select(Category).where(Category.name.in_(create_entity.categories))
+                existing_categories = await session.scalars(stmt)
 
-            for category in existing_categories:
-                book_category = BookCategory(book_id=entity.id, category_id=category.id)  # noqa
-                session.add(book_category)
+                for category in existing_categories:
+                    book_category = BookCategory(book_id=entity.id, category_id=category.id)  # noqa
+                    session.add(book_category)
 
-            await session.commit()
+                await session.commit()
+            except Exception:
+                await session.rollback()
+                raise self.create_entity_error
 
         if create_entity.images:
-            for img_data in create_entity.images:
-                book_image = await save_uploaded_book_image(img_data.file, entity.id, img_data.is_main)  # noqa
-                session.add(book_image)
+            try:
+                for img_data in create_entity.images:
+                    book_image = await save_uploaded_book_image(img_data.file, entity.id, img_data.is_main)  # noqa
+                    session.add(book_image)
 
-            await session.commit()
+                await session.commit()
+            except Exception:
+                await session.rollback()
+                raise self.create_entity_error
 
         return entity

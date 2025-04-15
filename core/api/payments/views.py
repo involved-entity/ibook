@@ -9,7 +9,7 @@ from core.database import get_session
 from core.database.models.user import UserRole
 
 config = CRUDRouterConfig(
-    "/stripe",
+    "/stripe/payments",
     ["Stripe API"],
     PaymentCreateSchema,
     PaymentSchema,
