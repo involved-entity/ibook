@@ -30,6 +30,10 @@ class Settings(BaseSettings):
     smtp_from_email: str = "noreply@ibook.com"
     smtp_tls: bool = True
 
+    stripe_secret_key: str
+    stripe_public_key: str
+    stripe_webhook_key: str
+
     class Config:
         env_file = ".env"
         extra = "allow"

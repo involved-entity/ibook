@@ -6,6 +6,7 @@ from core.api.books.views import router as books_router
 from core.api.categories.views import router as categories_router
 from core.api.order_items.views import router as order_items_router
 from core.api.orders.views import router as orders_router
+from core.api.payments.views import router as payments_router
 from core.api.reviews.views import router as reviews_router
 from core.api.users.sellers.views import router as sellers_router
 
@@ -18,3 +19,4 @@ router.include_router(reviews_router)
 router.include_router(orders_router)
 router.include_router(sellers_router)
 router.include_router(order_items_router)
+router.include_router(payments_router)
