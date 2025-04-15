@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Callable, Literal, Optional, Sequence, Type
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import ORJSONResponse, Response
 from pydantic import BaseModel, TypeAdapter
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -52,7 +52,11 @@ class CRUDRouter:
         return self.config.user_dependencies_map.get(method)
 
     async def _get_schema_validated_request_data(self, request: Request, schema_class: Type[BaseModel]) -> BaseModel:  # noqa
-        data = await request.json()
+        try:
+            data = await request.json()
+        except Exception:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid JSON")
+
         adapter = TypeAdapter(schema_class)
         return adapter.validate_python(data)
 
