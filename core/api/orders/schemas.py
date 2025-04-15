@@ -22,7 +22,7 @@ class OrderSchema(OrderCreateSchema):
     tracking_number: str | None = None
     items: list[OrderItemsSchema] | None = None
     address: AddressSchema
-    payment: list | None = None
+    payments: list | None = None
     id: int
 
 

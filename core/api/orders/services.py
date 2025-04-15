@@ -35,7 +35,7 @@ class OrdersCRUDService(CRUDService):
             select(self.model)
             .options(
                 joinedload(self.model.address),
-                joinedload(self.model.payment),
+                selectinload(self.model.payments),
                 selectinload(self.model.items),
             )
             .filter(self.model.status != OrderStatus.CANCELLED)
@@ -59,14 +59,15 @@ class OrdersCRUDService(CRUDService):
             items = create_entity.model_dump(include={"items"})["items"]
             stmt = select(Book).where(Book.id.in_(item["book_id"] for item in items))
             books = await session.scalars(stmt)
+            book_dict = {book.id: book for book in books}
 
             for order_item in items:
-                book_tuple = tuple(filter(lambda x: x.id == order_item["book_id"], books))
+                book = book_dict.get(order_item["book_id"])
 
-                if len(book_tuple):
+                if book:
                     item = OrderItem(
                         order_id=entity.id,  # noqa
-                        price=book_tuple[0].price,
+                        price=book.price,
                         **order_item,
                     )
                     session.add(item)
