@@ -29,4 +29,4 @@ class Payment(Base):
     currency: Mapped[str] = mapped_column(String(3), default="usd")
     status: Mapped[PaymentStatus] = mapped_column(SQLEnum(PaymentStatus), default=PaymentStatus.CREATED)
 
-    order: Mapped["Order"] = relationship(back_populates="payment")
+    order: Mapped["Order"] = relationship(back_populates="payments")

@@ -40,4 +40,4 @@ class Order(Base):
     user: Mapped["User"] = relationship(back_populates="orders")
     address: Mapped["Address"] = relationship(back_populates="orders")
     items: Mapped[list["OrderItem"]] = relationship(back_populates="order")
-    payment: Mapped["Payment"] = relationship(back_populates="order")
+    payments: Mapped[list["Payment"]] = relationship(back_populates="order")
