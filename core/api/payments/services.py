@@ -2,14 +2,14 @@ import typing
 
 import stripe
 from fastapi import HTTPException, status
-from sqlalchemy import Select, select
+from sqlalchemy import Select, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
 from core.api.payments.schemas import PaymentCreateResponseSchema, PaymentCreateSchema, PaymentSchema
 from core.api.services import C, CRUDService, M, S
 from core.config import settings
-from core.database.models import Order, Payment, User
+from core.database.models import Order, OrderItem, Payment, User
 from core.database.models.order import OrderStatus
 from core.database.models.payment import PaymentStatus
 from core.database.models.user import UserRole
@@ -98,6 +98,35 @@ async def _get_and_validate_payment_by_transaction_id(transaction_id: int, sessi
     )
 
 
+async def _handle_payment_success_for_order(order_id: int, session: AsyncSession) -> None:
+    stmt = select(
+        Order,
+        func.coalesce(
+            select(func.sum(Payment.amount))
+            .where(Payment.order_id == Order.id)
+            .where(Payment.status == PaymentStatus.PAID)
+            .scalar_subquery(),
+            0,
+        ).label("total_paid"),
+        func.coalesce(
+            select(func.sum(OrderItem.quantity * OrderItem.price))
+            .where(OrderItem.order_id == Order.id)
+            .scalar_subquery(),
+            0,
+        ).label("total_books_cost"),
+    ).where(Order.id == order_id)
+
+    result = await session.execute(stmt)
+    row = result.mappings().first()
+
+    order, total_amount, total_price = row["Order"], row["total_paid"], row["total_books_cost"]
+
+    if total_amount >= total_price:
+        order.status = OrderStatus.PAID
+        session.add(order)
+        await session.commit()
+
+
 async def handle_stripe_webhook(payload: bytes, sig_header: str, session: AsyncSession):
     event = _construct_event(payload, sig_header)
 
@@ -107,5 +136,6 @@ async def handle_stripe_webhook(payload: bytes, sig_header: str, session: AsyncS
         payment.status = PaymentStatus.PAID
         session.add(payment)
         await session.commit()
+        await _handle_payment_success_for_order(payment.order.id, session)
 
     return {"status": "success"}
