@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import ForeignKey, Index, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core.database.models.base import Base
@@ -24,3 +24,5 @@ class Address(Base):
 
     user: Mapped[User] = relationship(back_populates="addresses")
     orders: Mapped[list[Order]] = relationship(back_populates="address")
+
+    __table_args__ = (Index("uq_user_primary_address", user_id, unique=True, postgresql_where=(is_primary is True)),)
