@@ -13,6 +13,6 @@ class SellerSimplyfiedSchema(BaseModel):
     registration_date: datetime
 
 
-class SellerSchema(BaseModel):
+class SellerSchema(SellerSimplyfiedSchema):
     books_count: int
     average_rating: typing.Optional[float]

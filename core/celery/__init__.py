@@ -12,5 +12,5 @@ celery = Celery(
 
 
 @celery.task
-def send_email_task(email_to: str, subject: str, html_content: str):
+def send_email_task(email_to: str, subject: str, html_content: str) -> None:
     send_email(email_to, subject, html_content)

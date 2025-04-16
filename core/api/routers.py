@@ -87,13 +87,13 @@ class CRUDRouter:
 
         if "retrieve" not in self.config.excluded_opts:
 
-            @self.router.get("/{entity_id}", response_model=list[response_schema_class])
+            @self.router.get("/{id}", response_model=list[response_schema_class])
             async def retrieve_entity(
-                entity_id: int,
+                id: int,  # noqa
                 session: AsyncSession = Depends(get_session),
                 user: User = Depends(retrieve_user_dependency),
             ) -> ORJSONResponse:
-                entity = await self.config.crud_service.retrieve_entity(entity_id, session, user)
+                entity = await self.config.crud_service.retrieve_entity(id, session, user)
                 return ORJSONResponse(entity)
 
         if "create" not in self.config.excluded_opts:
@@ -111,26 +111,26 @@ class CRUDRouter:
         if "update" not in self.config.excluded_opts:
 
             @self.router.patch(
-                "/{entity_id}",
+                "/{id}",
                 response_model=response_schema_class,
             )
             async def update_entity(
                 request: Request,
-                entity_id: int,
+                id: int,  # noqa
                 session: AsyncSession = Depends(get_session),
                 user: User = Depends(update_user_dependency),
             ) -> ORJSONResponse:
                 update_schema = await self._get_schema_validated_request_data(request, update_schema_class)
-                entity = await self.config.crud_service.update_entity(entity_id, update_schema, session, user)
+                entity = await self.config.crud_service.update_entity(id, update_schema, session, user)
                 return ORJSONResponse(entity)
 
         if "delete" not in self.config.excluded_opts:
 
-            @self.router.delete("/{entity_id}", status_code=status.HTTP_204_NO_CONTENT)
+            @self.router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
             async def delete_entity(
-                entity_id: int,
+                id: int,  # noqa
                 session: AsyncSession = Depends(get_session),
                 user: User = Depends(delete_user_dependency),
             ) -> Response:
-                await self.config.crud_service.remove_entity(entity_id, session, user)
+                await self.config.crud_service.remove_entity(id, session, user)
                 return Response(status_code=status.HTTP_204_NO_CONTENT)

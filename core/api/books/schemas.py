@@ -4,14 +4,7 @@ from typing import Annotated, Any, Optional, Self
 from pydantic import BaseModel, ConfigDict, Field
 
 from core.api.book_images.schemas import BookImageSchema, BookImageSimplyfiedCreateSchema
-from core.api.categories.schemas import CategorySchema
 from core.api.users.sellers.schemas import SellerSimplyfiedSchema
-
-
-class BookCategorySchema(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    category: CategorySchema
 
 
 class BookBaseSchema(BaseModel):

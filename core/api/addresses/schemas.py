@@ -24,9 +24,9 @@ class AddressSchema(AddressCreateSchema):
 class AddressUpdateSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    city: Annotated[Optional[str], Field(max_length=100)] = None
-    street: Annotated[Optional[str], Field(max_length=100)] = None
-    house: Annotated[Optional[str], Field(max_length=20)] = None
-    apartment: Annotated[Optional[str], Field(max_length=20)] = None
-    postal_code: Annotated[Optional[str], Field(max_length=20)] = None
-    is_primary: Annotated[Optional[bool], Field()] = None
+    city: Annotated[Optional[str], Field(max_length=100, examples=["Moscow"])] = None
+    street: Annotated[Optional[str], Field(max_length=100, examples=["Lenina"])] = None
+    house: Annotated[Optional[str], Field(max_length=20, examples=["15A"])] = None
+    apartment: Annotated[Optional[str], Field(max_length=20, examples=["42"])] = None
+    postal_code: Annotated[Optional[str], Field(max_length=20, examples=["123456"])] = None
+    is_primary: Annotated[Optional[bool], Field(examples=[False])] = None

@@ -10,7 +10,7 @@ async def server_error_middleware(request: Request, call_next):
     except ValidationError as e:
         return JSONResponse(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            content={"message": "Validation error", "details": e.errors()},
+            content=e.errors(),
         )
     except Exception:  # noqa
         return JSONResponse(

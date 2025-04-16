@@ -80,15 +80,13 @@ class OrdersCRUDService(CRUDService):
         if update_entity.address_id and not await self._check_address_perms(update_entity.address_id, user, session):
             update_entity.address_id = None
 
-        if update_entity.status:
-            if not (
-                user.role == UserRole.ADMIN or update_entity.status in (OrderStatus.CREATED, OrderStatus.CANCELLED)
-            ):
-                update_entity.status = None
+        if update_entity.status and (
+            user.role != UserRole.ADMIN and update_entity.status not in (OrderStatus.CREATED, OrderStatus.CANCELLED)
+        ):
+            update_entity.status = None
 
-        if update_entity.tracking_number:
-            if not user.role == UserRole.ADMIN:
-                update_entity.tracking_number = None
+        if update_entity.tracking_number and user.role != UserRole.ADMIN:
+            update_entity.tracking_number = None
 
         return entity
 

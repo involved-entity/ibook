@@ -7,7 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field
 class ReviewCreateSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    book_id: int
+    book_id: typing.Annotated[int, Field(gt=0)]
     rating: typing.Annotated[int, Field(gt=0, le=5)]
     text: str | None = None
 

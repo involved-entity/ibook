@@ -89,7 +89,7 @@ class CRUDService:
         return self.schema_class.model_validate(entity).model_dump()
 
     def check_permissions_to_retrieve_entity(self, entity: M, user: User) -> M:
-        if self.retrieve_owner_only and user not in (UserRole.ADMIN,) and user.id != getattr(entity, self.user_field):
+        if self.retrieve_owner_only and user.role != UserRole.ADMIN and user.id != getattr(entity, self.user_field):
             raise self.permission_denied_error
 
         return entity
@@ -142,9 +142,7 @@ class CRUDService:
         await session.commit()
 
     async def check_permissions_to_edit_entity(self, entity: M, user: User, session: AsyncSession) -> M:  # noqa
-        if self.admin_or_owner_to_edit and not (
-            user.role == UserRole.ADMIN or user.id == getattr(entity, self.user_field)
-        ):
+        if self.admin_or_owner_to_edit and user.role != UserRole.ADMIN and user.id != getattr(entity, self.user_field):
             raise self.permission_denied_error
 
         return entity

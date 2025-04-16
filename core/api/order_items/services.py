@@ -19,8 +19,8 @@ class OrderItemsCRUDService(CRUDService):
 
     async def _check_perms_to_order(self, order_id: int, user: User, session: AsyncSession) -> Order | None:  # noqa
         order = await session.get(Order, order_id)
-        perms_check = user.role not in (UserRole.ADMIN,) and bool(user.id != order.user_id)
-        order_status_check = order.status in (OrderStatus.CANCELLED,)
+        perms_check = user.role != UserRole.ADMIN and user.id != order.user_id
+        order_status_check = order.status == OrderStatus.CANCELLED
 
         if perms_check:
             raise self.permission_denied_error
@@ -47,7 +47,7 @@ class OrderItemsCRUDService(CRUDService):
         return entity
 
     async def before_entity_update(self, entity: M, update_entity: U, user: User, session: AsyncSession) -> M:
-        if update_entity.price and user.role not in (UserRole.ADMIN,):
+        if update_entity.price and user.role != UserRole.ADMIN:
             update_entity.price = None
 
         return entity

@@ -18,7 +18,9 @@ class UserCreate(schemas.BaseUserCreate):
     first_name: typing.Annotated[str, Field(max_length=50, examples=["John"])]
     last_name: typing.Annotated[str, Field(max_length=50, examples=["Cena"], default=None)] = None
     phone: typing.Annotated[str, Field(max_length=20, examples=["+79991234567"])]
-    role: typing.Annotated[UserCreateRole, Field(default=UserCreateRole.CUSTOMER)] = UserCreateRole.CUSTOMER
+    role: typing.Annotated[UserCreateRole, Field(default=UserCreateRole.CUSTOMER, examples=["SELLER", "CUSTOMER"])] = (
+        UserCreateRole.CUSTOMER
+    )
 
     @classmethod
     @field_validator("phone")

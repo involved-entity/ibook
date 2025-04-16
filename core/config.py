@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from pydantic_settings import BaseSettings
 
 
@@ -22,6 +24,7 @@ class Settings(BaseSettings):
 
     jinja_password_reset_template: str = "password_reset.html"
     jinja_password_verify_template: str = "verify_account.html"
+    templates_path: Path = Path(__file__).parent / "celery" / "email_templates"
 
     smtp_host: str = "smtp.gmail.com"
     smtp_port: int = 587
@@ -33,6 +36,8 @@ class Settings(BaseSettings):
     stripe_secret_key: str
     stripe_public_key: str
     stripe_webhook_key: str
+
+    login_url: str = "api/auth/login"
 
     class Config:
         env_file = ".env"

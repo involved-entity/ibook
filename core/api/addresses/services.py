@@ -23,6 +23,7 @@ class AddressesCRUDService(CRUDService):
         if schema.is_primary:
             stmt = select(Address).where(Address.user_id == user.id, Address.is_primary == True)
             primary = await session.scalar(stmt)
+
             if primary:
                 primary.is_primary = False
                 session.add(primary)

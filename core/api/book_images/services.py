@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.api.book_images.schemas import BookImageCreateSchema, BookImageSchema, BookImageUpdateSchema
 from core.api.services import C, CRUDService, M
 from core.config import settings
-from core.database.models import Book, BookImage, Order, User
+from core.database.models import Book, BookImage, User
 from core.database.models.user import UserRole
 
 UPLOAD_DIR = Path(settings.upload_book_images_dir)
@@ -44,14 +44,16 @@ class BookImagesCRUDService(CRUDService):
     create_schema_class = BookImageCreateSchema
     update_schema_class = BookImageUpdateSchema
 
-    async def _check_perms_to_book(self, book_id: int, user: User, session: AsyncSession) -> Order | None:  # noqa
+    async def _check_perms_to_book(self, book_id: int, user: User, session: AsyncSession) -> Book:
         book = await session.get(Book, book_id)
-        perms_check = user.role not in (UserRole.ADMIN,) and bool(user.id != book.seller_id)
 
-        if perms_check:
+        if not book:
+            raise self.create_entity_error
+
+        if user.role != UserRole.ADMIN and user.id != book.seller_id:
             raise self.permission_denied_error
 
-        return book
+        return book  # noqa
 
     async def check_permissions_to_edit_entity(self, entity: M, user: User, session: AsyncSession) -> M:
         await self._check_perms_to_book(entity.book_id, user, session)
@@ -59,10 +61,7 @@ class BookImagesCRUDService(CRUDService):
         return entity
 
     async def before_entity_create(self, entity: M, create_entity: C, user: User, session: AsyncSession) -> M:
-        book = await self._check_perms_to_book(create_entity.book_id, user, session)
-
-        if not book:
-            raise self.create_entity_error
+        await self._check_perms_to_book(create_entity.book_id, user, session)
 
         filename = await _save_uploaded_file(create_entity.file)
         entity.url = filename

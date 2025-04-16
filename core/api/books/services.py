@@ -27,7 +27,6 @@ class BooksCRUDService(CRUDService):
             select(self.model)
             .options(
                 joinedload(self.model.seller),
-                selectinload(self.model.order_items),
                 selectinload(self.model.images),
                 selectinload(self.model.categories).joinedload(BookCategory.category),
             )

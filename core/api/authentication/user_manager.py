@@ -1,5 +1,4 @@
 import logging
-from pathlib import Path
 from typing import Optional
 
 from fastapi import Request
@@ -12,8 +11,7 @@ from core.database.models import User
 
 logger = logging.getLogger(__name__)
 
-templates_path = Path(__file__).parent.parent.parent / "celery" / "email_templates"
-env = Environment(loader=FileSystemLoader(templates_path), autoescape=True)
+env = Environment(loader=FileSystemLoader(settings.templates_path), autoescape=True)
 
 
 class UserManager(IntegerIDMixin, BaseUserManager[User, int]):

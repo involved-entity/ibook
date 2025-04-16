@@ -58,8 +58,10 @@ class PaymentsCRUDService(CRUDService):
 
     async def _check_perms_to_create_payment(self, order_id: int, user: User, session: AsyncSession) -> None:
         order = await session.get(Order, order_id, options=(selectinload(Order.items),))
+
         if user.role != UserRole.ADMIN and order.user_id != user.id:
             raise self.permission_denied_error
+
         if not (order.status == OrderStatus.CREATED and len(order.items)):  # noqa
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Order is not ready to accept payments")
 
@@ -123,6 +125,7 @@ async def _handle_payment_success_for_order(order_id: int, session: AsyncSession
 
     if total_amount >= total_price:
         order.status = OrderStatus.PAID
+        # notification to admins here mb?
         session.add(order)
         await session.commit()
 

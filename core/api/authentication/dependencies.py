@@ -6,15 +6,11 @@ from core.database import get_session
 from core.database.models import Token, User
 
 
-async def get_access_token_db(
-    session: AsyncSession = Depends(get_session),
-):
+async def get_access_token_db(session: AsyncSession = Depends(get_session)):
     yield Token.get_db(session)
 
 
-async def get_user_db(
-    session: AsyncSession = Depends(get_session),
-):
+async def get_user_db(session: AsyncSession = Depends(get_session)):
     yield User.get_db(session)
 
 
