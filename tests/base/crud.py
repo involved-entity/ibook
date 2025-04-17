@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Type
+from typing import Any, Dict, List, Optional, Type
 
 import pytest
 from fastapi import status
@@ -21,8 +21,7 @@ class CRUDTest:
     def keys_to_check_after_create(self) -> List[str]:
         raise NotImplementedError
 
-    @pytest.fixture
-    def sample_create_data(self) -> Dict[str, Any]:
+    def get_create_data(self, before_create_hook_return: Optional[Any] = None):
         raise NotImplementedError
 
     @pytest.fixture
@@ -39,13 +38,14 @@ class CRUDTest:
         self,
         seller: AsyncClient,
         customer: AsyncClient,
-        sample_create_data: Dict[str, Any],
         keys_to_check_after_create: List[str],
     ):
         if "create" not in self.permissions_map:
             return
 
         client = self.get_client("create", seller, customer)
+        res = await self.before_create_entity(seller, customer)
+        sample_create_data = self.get_create_data(res)
         response = await client.post(self.endpoint, json=sample_create_data)
         assert response.status_code == status.HTTP_201_CREATED
         data = response.json()
@@ -58,12 +58,13 @@ class CRUDTest:
         self,
         seller: AsyncClient,
         customer: AsyncClient,
-        sample_create_data: Dict[str, Any],
         keys_to_check_after_create: List[str],
     ):
         if "retrieve" not in self.permissions_map:
             return
 
+        res = await self.before_create_entity(seller, customer)
+        sample_create_data = self.get_create_data(res)
         create_response = await self.get_client("create", seller, customer).post(self.endpoint, json=sample_create_data)
         item_id = create_response.json()["id"]
 
@@ -79,12 +80,13 @@ class CRUDTest:
         self,
         seller: AsyncClient,
         customer: AsyncClient,
-        sample_create_data: Dict[str, Any],
         sample_update_data: Dict[str, Any],
     ):
         if "update" not in self.permissions_map:
             return
 
+        res = await self.before_create_entity(seller, customer)
+        sample_create_data = self.get_create_data(res)
         create_response = await self.get_client("create", seller, customer).post(self.endpoint, json=sample_create_data)
         item_id = create_response.json()["id"]
 
@@ -98,10 +100,12 @@ class CRUDTest:
             assert data[key] == value
 
     @pytest.mark.asyncio
-    async def test_delete_item(self, seller: AsyncClient, customer: AsyncClient, sample_create_data: Dict[str, Any]):
+    async def test_delete_item(self, seller: AsyncClient, customer: AsyncClient):
         if "remove" not in self.permissions_map:
             return
 
+        res = await self.before_create_entity(seller, customer)
+        sample_create_data = self.get_create_data(res)
         create_response = await self.get_client("create", seller, customer).post(self.endpoint, json=sample_create_data)
         item_id = create_response.json()["id"]
 
@@ -112,7 +116,7 @@ class CRUDTest:
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     @pytest.mark.asyncio
-    async def test_list_items(self, seller: AsyncClient, customer: AsyncClient, sample_create_data: Dict[str, Any]):
+    async def test_list_items(self, seller: AsyncClient, customer: AsyncClient):
         if "list" not in self.permissions_map:
             return
 
@@ -120,6 +124,8 @@ class CRUDTest:
         initial_count = len(initial_response.json().get("items", []))
 
         for _ in range(3):
+            res = await self.before_create_entity(seller, customer)
+            sample_create_data = self.get_create_data(res)
             await self.get_client("create", seller, customer).post(self.endpoint, json=sample_create_data)
 
         response = await self.get_client("list", seller, customer).get(self.endpoint)
@@ -127,3 +133,6 @@ class CRUDTest:
         data = response.json()
         assert isinstance(data, dict)
         assert len(data["items"]) == initial_count + 3
+
+    async def before_create_entity(self, seller: AsyncClient, customer: AsyncClient):
+        pass

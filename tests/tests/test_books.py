@@ -1,3 +1,5 @@
+from typing import Any, Optional
+
 import pytest
 
 from core.api.books.schemas import BookCreateSchema, BookUpdateSchema
@@ -24,8 +26,7 @@ class TestBookCRUD(CRUDTest):
     def keys_to_check_after_create(self):
         return ["title", "author", "price"]
 
-    @pytest.fixture
-    def sample_create_data(self):
+    def get_create_data(self, before_create_hook_return: Optional[Any] = None):
         return {"title": "Margin", "author": "Me", "price": 199.99, "categories": ["Bestsellers"]}
 
     @pytest.fixture

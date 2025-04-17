@@ -1,3 +1,5 @@
+from typing import Any, Optional
+
 import pytest
 
 from core.api.addresses.schemas import AddressCreateSchema, AddressUpdateSchema
@@ -24,8 +26,7 @@ class TestAddressCRUD(CRUDTest):
     def keys_to_check_after_create(self):
         return ["city", "street", "house", "postal_code", "is_primary"]
 
-    @pytest.fixture
-    def sample_create_data(self):
+    def get_create_data(self, before_create_hook_return: Optional[Any] = None):
         return {"city": "Tokyo", "street": "Shibuya?", "house": "683B", "postal_code": "456753", "is_primary": True}
 
     @pytest.fixture
