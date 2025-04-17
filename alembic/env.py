@@ -30,7 +30,10 @@ target_metadata = Base.metadata
 # ... etc.
 from core.config import settings
 
-config.set_main_option("sqlalchemy.url", settings.database_url)
+if settings.testing:
+    config.set_main_option("sqlalchemy.url", settings.test_database_url)
+else:
+    config.set_main_option("sqlalchemy.url", settings.database_url)
 
 
 def run_migrations_offline() -> None:

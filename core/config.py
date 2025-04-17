@@ -5,8 +5,10 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     debug: bool = False
+    testing: bool = False
 
     database_url: str
+    test_database_url: str
 
     reset_password_token_secret: str
     verification_token_secret: str

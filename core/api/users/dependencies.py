@@ -4,9 +4,13 @@ from fastapi import HTTPException, status
 from fastapi.params import Depends
 
 from core.api.authentication.routers import fastapi_users
+from core.config import settings
 from core.database.models.user import User, UserRole
 
-current_active_verified_user = fastapi_users.current_user(active=True, verified=True)
+if settings.testing:
+    current_active_verified_user = fastapi_users.current_user(active=True, verified=False)
+else:
+    current_active_verified_user = fastapi_users.current_user(active=True, verified=True)
 
 
 def check_user_role(*valid_roles: UserRole, exclude_admin: bool = False) -> typing.Callable:
