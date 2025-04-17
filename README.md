@@ -7,5 +7,5 @@
 5. Postgres transactions  +
 6. Add postgres rules  +
 7. Global refactoring  +
-8. Tests
-9. Docker + gunicorn + nginx
+8. Tests  +
+9. Docker + gunicorn + nginx  +
