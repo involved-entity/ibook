@@ -1,11 +1,11 @@
 # iBook
-### TODO:
-1. Middlewares  +
-2. Pagination  +
-3. Email sending with celery  +
-4. Payment adding with stripe and relations to order  +
-5. Postgres transactions  +
-6. Add postgres rules  +
-7. Global refactoring  +
-8. Tests  +
-9. Docker + gunicorn + nginx  +
+__Backend__ часть для книжного маркетплейса `ibook`, написаная на современном асинхронном FastAPI, детальнее - используются так же PostgreSQL, RabbitMQ, Celery, Alembic, SQLAlchemy, pytest, gunicorn. Дополнительно проект настроен на использование `Stripe` для оплаты заказов на книги.
+## Установка
+```bash
+git clone https://github.com/waflawe/ibook
+cd ibook
+docker-compose up
+```
+Проект будет запущен в продакшен режиме на `http://localhost/`, документация - `http://localhost/docs`
+## Функционал
+Пользователи имеют роли `ADMIN`, `SELLER`, `CUSTOMER` и соответствующие ролям права. Реализована логика заказов, отзывов, категорий книг, адресов покупателей, оплата заказов через `Stripe`, а так же логин, регистрация, сброс пароля и верификация аккаунта с помощью `FastAPI-Users` и отложенных задач. `70%` логики покрыты тестами `pytest` (согласно `pytest-cov`).
