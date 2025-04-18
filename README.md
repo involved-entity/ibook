@@ -2,7 +2,7 @@
 __Backend__ часть для книжного маркетплейса `ibook`, написаная на современном асинхронном FastAPI, детальнее - используются так же PostgreSQL, RabbitMQ, Celery, Alembic, SQLAlchemy, pytest, gunicorn. Дополнительно проект настроен на использование `Stripe` для оплаты заказов на книги.
 ## Установка
 ```bash
-git clone https://github.com/waflawe/ibook
+git clone https://github.com/involved-entity/ibook
 cd ibook
 docker-compose up
 ```
