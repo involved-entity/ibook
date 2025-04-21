@@ -22,9 +22,7 @@ class TestReviewCRUD(CRUDTest):
         "delete": (UserRole.CUSTOMER.value,),
     }
 
-    @pytest.fixture
-    def keys_to_check_after_create(self):
-        return ["rating", "text"]
+    keys_to_check_after_create = ["rating", "text"]
 
     def get_create_data(self, before_create_hook_return: Optional[Any] = None):
         return {"book_id": before_create_hook_return["book_id"], "rating": 4, "text": "good"}

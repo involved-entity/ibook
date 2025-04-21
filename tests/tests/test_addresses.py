@@ -22,9 +22,7 @@ class TestAddressCRUD(CRUDTest):
         "list": (UserRole.CUSTOMER.value,),
     }
 
-    @pytest.fixture
-    def keys_to_check_after_create(self):
-        return ["city", "street", "house", "postal_code", "is_primary"]
+    keys_to_check_after_create = ["city", "street", "house", "postal_code", "is_primary"]
 
     def get_create_data(self, before_create_hook_return: Optional[Any] = None):
         return {"city": "Tokyo", "street": "Shibuya?", "house": "683B", "postal_code": "456753", "is_primary": True}
