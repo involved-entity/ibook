@@ -1,4 +1,5 @@
 import typing
+from typing import NoReturn
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,6 +21,7 @@ class BooksCRUDService(CRUDService):
     user_field = "seller_id"
 
     admin_or_owner_to_edit = True
+    commit_before_after_create_hook = False
     save_user_id_before_create = True
 
     def get_entities_default_query(self, query: typing.Optional[dict] = None) -> Select:
@@ -30,22 +32,26 @@ class BooksCRUDService(CRUDService):
                 selectinload(self.model.images),
                 selectinload(self.model.categories).joinedload(BookCategory.category),
             )
-            .order_by(self.model.id.desc())
+            .order_by(self.model.id.desc())  # noqa
         )
 
         if query and query.get("author"):
-            stmt = stmt.filter(self.model.author.ilike(f"%{query['author']}%"))
+            stmt = stmt.filter(self.model.author.ilike(f"%{query['author']}%"))  # noqa
         if query and query.get("title"):
-            stmt = stmt.filter(self.model.title.ilike(f"%{query['title']}%"))
+            stmt = stmt.filter(self.model.title.ilike(f"%{query['title']}%"))  # noqa
         if query and query.get("seller_id") and query["seller_id"].isnumeric():
             stmt = stmt.where(self.model.seller_id == int(query["seller_id"]))
 
         return stmt
 
+    async def rollback(self, session: AsyncSession) -> NoReturn:
+        await session.rollback()
+        raise self.create_entity_error
+
     async def after_entity_create(self, entity: M, create_entity: C, user: User, session: AsyncSession) -> M:
         if create_entity.categories:
             try:
-                stmt = select(Category).where(Category.name.in_(create_entity.categories))
+                stmt = select(Category).where(Category.name.in_(create_entity.categories))  # noqa
                 existing_categories = await session.scalars(stmt)
 
                 for category in existing_categories:
@@ -58,14 +64,16 @@ class BooksCRUDService(CRUDService):
                 raise self.create_entity_error
 
         if create_entity.images:
+            if len(list(filter(lambda x: x.is_main, create_entity.images))) != 1:
+                await self.rollback(session)
+
             try:
                 for img_data in create_entity.images:
                     book_image = await save_uploaded_book_image(img_data.file, entity.id, img_data.is_main)  # noqa
                     session.add(book_image)
 
                 await session.commit()
-            except Exception:
-                await session.rollback()
-                raise self.create_entity_error
+            except Exception:  # noqa
+                await self.rollback(session)
 
         return entity

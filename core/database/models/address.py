@@ -25,4 +25,4 @@ class Address(Base):
     user: Mapped[User] = relationship(back_populates="addresses")
     orders: Mapped[list[Order]] = relationship(back_populates="address")
 
-    __table_args__ = (Index("uq_user_primary_address", user_id, unique=True, postgresql_where=(is_primary is True)),)
+    __table_args__ = (Index("uq_user_primary_address", user_id, unique=True, postgresql_where=(is_primary == True)),)

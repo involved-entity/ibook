@@ -2,7 +2,9 @@ import uuid
 from pathlib import Path
 
 import aiofiles
-from fastapi import UploadFile
+from fastapi import UploadFile, status
+from fastapi.exceptions import HTTPException
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.api.book_images.schemas import BookImageCreateSchema, BookImageSchema, BookImageUpdateSchema
@@ -44,6 +46,8 @@ class BookImagesCRUDService(CRUDService):
     create_schema_class = BookImageCreateSchema
     update_schema_class = BookImageUpdateSchema
 
+    create_entity_error = HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
+
     async def _check_perms_to_book(self, book_id: int, user: User, session: AsyncSession) -> Book:
         book = await session.get(Book, book_id)
 
@@ -55,6 +59,12 @@ class BookImagesCRUDService(CRUDService):
 
         return book  # noqa
 
+    async def validate_is_main_field(self, entity: M, session: AsyncSession) -> None:  # noqa
+        stmt = select(BookImage).where(BookImage.book_id == entity.book_id, BookImage.is_main == True)
+        active_main_image = await session.scalar(stmt)
+        active_main_image.is_main = False
+        session.add(active_main_image)
+
     async def check_permissions_to_edit_entity(self, entity: M, user: User, session: AsyncSession) -> M:
         await self._check_perms_to_book(entity.book_id, user, session)
 
@@ -62,6 +72,9 @@ class BookImagesCRUDService(CRUDService):
 
     async def before_entity_create(self, entity: M, create_entity: C, user: User, session: AsyncSession) -> M:
         await self._check_perms_to_book(create_entity.book_id, user, session)
+
+        if create_entity.is_main:
+            await self.validate_is_main_field(entity, session)
 
         filename = await _save_uploaded_file(create_entity.file)
         entity.url = filename
