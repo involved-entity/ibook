@@ -41,6 +41,9 @@ class Settings(BaseSettings):
 
     login_url: str = "api/auth/login"
 
+    test_user_password: str = "12345678"
+    test_base_app_url: str = "http://localhost:8000"
+
     class Config:
         env_file = ".env"
         extra = "allow"

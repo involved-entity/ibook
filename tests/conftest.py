@@ -16,7 +16,7 @@ def user_factory() -> typing.Type[UserFactory]:
 async def client_factory(
     client: AsyncClient, user_factory: typing.Type[UserFactory], role: UserRole = UserRole.CUSTOMER
 ):
-    register_data = user_factory.stub(password="12345678", first_name="G", role=role)
+    register_data = user_factory.stub(password=settings.test_user_password, first_name="G", role=role)
     register_data = {
         "email": register_data.email,
         "password": register_data.password,
@@ -27,7 +27,7 @@ async def client_factory(
 
     await client.post("/api/auth/register", json=register_data)
 
-    login_data = {"username": register_data["email"], "password": "12345678"}
+    login_data = {"username": register_data["email"], "password": settings.test_user_password}
     response = await client.post(settings.login_url, data=login_data)
     token = response.json()["access_token"]
     client.headers["Authorization"] = f"Bearer {token}"
@@ -36,11 +36,11 @@ async def client_factory(
 
 @pytest.fixture
 async def customer(user_factory: typing.Type[UserFactory]):
-    async with AsyncClient(base_url="http://localhost:8000") as client:
+    async with AsyncClient(base_url=settings.test_base_app_url) as client:
         yield await client_factory(client, user_factory)
 
 
 @pytest.fixture
 async def seller(user_factory: typing.Type[UserFactory]):
-    async with AsyncClient(base_url="http://localhost:8000") as client:
+    async with AsyncClient(base_url=settings.test_base_app_url) as client:
         yield await client_factory(client, user_factory, role=UserRole.SELLER)
