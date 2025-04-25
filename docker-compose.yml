@@ -9,6 +9,25 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - app_network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    networks:
+      - app_network
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -30,11 +49,17 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
+    volumes:
+      - ./core:/app/core
+      - ./tests:/app/tests
+      - ./alembic:/app/alembic
     ports:
       - "8000:8000"
     depends_on:
-      - postgres
-      - rabbitmq
+      rabbitmq:
+        condition: service_started
+      postgres:
+        condition: service_healthy
     env_file:
       - ./.env.docker
     networks:
@@ -54,6 +79,7 @@ services:
 volumes:
   postgres_data:
   rabbitmq_data:
+  pgadmin_data:
 
 networks:
   app_network:

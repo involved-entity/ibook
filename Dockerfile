@@ -12,4 +12,6 @@ COPY . .
 
 ADD .env.docker /app/.env
 
-CMD sleep 10; uv run gunicorn main:app -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --workers 8
+RUN uv run alembic upgrade head
+
+CMD uv run gunicorn main:app -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --workers 8
