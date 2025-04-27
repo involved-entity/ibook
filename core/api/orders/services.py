@@ -25,6 +25,8 @@ class OrdersCRUDService(CRUDService):
     list_owner_only = True
     retrieve_owner_only = True
     use_custom_remove = True
+    list_pagination = False
+    use_cache = True
 
     create_model_dump_exclude = {"items"}
 

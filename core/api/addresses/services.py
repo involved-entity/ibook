@@ -19,6 +19,9 @@ class AddressesCRUDService(CRUDService):
     list_owner_only = True
     retrieve_owner_only = True
 
+    list_pagination = False
+    use_cache = True
+
     async def _check_primary_field_constraint(self, schema: C | U, user: User, session: AsyncSession) -> None:  # noqa
         if schema.is_primary:
             stmt = select(Address).where(Address.user_id == user.id, Address.is_primary == True)

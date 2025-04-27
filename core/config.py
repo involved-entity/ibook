@@ -44,6 +44,9 @@ class Settings(BaseSettings):
     test_user_password: str = "12345678"
     test_base_app_url: str = "http://localhost:8000"
 
+    redis_url: str = "redis://localhost:6379/0"
+    redis_cache_names_sep: str = ":"
+
     class Config:
         env_file = ".env"
         extra = "allow"

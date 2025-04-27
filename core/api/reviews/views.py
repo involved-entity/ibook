@@ -12,12 +12,12 @@ config = CRUDRouterConfig(
     ReviewSchema,
     ReviewsCRUDService(),
     {
-        # "list": check_user_role(UserRole.CUSTOMER, UserRole.SELLER),
         "retrieve": check_user_role(UserRole.CUSTOMER, UserRole.SELLER),
         "create": check_user_role(UserRole.CUSTOMER),
         "update": check_user_role(UserRole.CUSTOMER),
         "delete": check_user_role(UserRole.CUSTOMER),
     },
+    excluded_opts=["list"],
 )
 
 crud_router = CRUDRouter(config)

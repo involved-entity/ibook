@@ -11,6 +11,8 @@ class CategoriesCRUDService(CRUDService):
     create_schema_class = CategoryCreateSchema
 
     list_pagination = False
+    use_cache = True
+
     create_entity_error = HTTPException(
         status_code=status.HTTP_400_BAD_REQUEST, detail="This name and/or slug already exists"
     )

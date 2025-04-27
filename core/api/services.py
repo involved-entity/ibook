@@ -1,4 +1,5 @@
 import typing
+from datetime import timedelta
 
 from fastapi import HTTPException, status
 from pydantic import BaseModel
@@ -10,6 +11,7 @@ from core.api.schemas import ListPaginatedResponse
 from core.config import settings
 from core.database.models import Base, User
 from core.database.models.user import UserRole
+from core.redis import RedisCache
 
 M = typing.TypeVar("M", bound=Base)
 S = typing.TypeVar("S", bound=BaseModel)
@@ -34,6 +36,9 @@ class CRUDService:
     list_pagination: bool = True
     commit_before_after_create_hook: bool = True
 
+    use_cache: bool = False
+    cache_exp: int = 60  # minutes
+
     create_model_dump_exclude: set[str] | None = None
 
     permission_denied_error: HTTPException = HTTPException(
@@ -41,6 +46,18 @@ class CRUDService:
     )
     not_found_error: HTTPException = HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found.")
     create_entity_error: HTTPException = HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+
+    def _get_cache_key(self, user: typing.Optional[User] = None) -> str:
+        key = f"{self.model.__name__.lower()}"
+
+        if self.list_owner_only:
+            key += f"{settings.redis_cache_names_sep}{user.id}"
+
+        return key
+
+    async def _invalidate_cache(self, user: typing.Optional[User] = None) -> None:
+        key = self._get_cache_key(user)
+        await RedisCache.delete(key)
 
     def get_entities_default_query(self, query: typing.Optional[dict] = None) -> Select:
         return select(self.model).order_by(self.model.id.desc())
@@ -53,9 +70,9 @@ class CRUDService:
 
         return entity
 
-    async def get_entities_list(
+    async def _get_entities_list_actual_data(
         self, session: AsyncSession, query: dict, user: typing.Optional[User] = None
-    ) -> dict[str, typing.Any]:
+    ) -> tuple[list[M], int, int | None]:
         if self.list_owner_only:
             stmt = (
                 self.get_entities_default_query(query).where(getattr(self.model, self.user_field) == user.id)  # noqa
@@ -69,12 +86,34 @@ class CRUDService:
             )
 
         total = await session.scalar(func.count(self.model.id))
-        entities = await session.scalars(stmt)
+        entities = list(await session.scalars(stmt))
         pages = (
             (total + settings.pagination_page_size - 1) // settings.pagination_page_size
             if self.list_pagination
             else None
         )
+
+        await RedisCache.set(self._get_cache_key(user), entities, timedelta(minutes=self.cache_exp))
+
+        return entities, total, pages
+
+    async def get_entities_list(
+        self, session: AsyncSession, query: dict, user: typing.Optional[User] = None
+    ) -> dict[str, typing.Any]:
+        pages = None
+
+        if not self.list_pagination and self.use_cache:
+            key = self._get_cache_key(user)
+
+            entities = await RedisCache.get(key)
+
+            if not entities:
+                entities, total, pages = await self._get_entities_list_actual_data(session, query, user)
+            else:
+                total = len(entities)
+
+        else:
+            entities, total, pages = await self._get_entities_list_actual_data(session, query, user)
 
         return ListPaginatedResponse[self.schema_class](
             items=[self.schema_class.model_validate(entity) for entity in entities], total=total, pages=pages
@@ -108,6 +147,7 @@ class CRUDService:
 
         entity = await self.after_entity_create(entity, create_entity_data, user, session)
         stmt = self.get_entities_default_query().where(self.model.id == entity.id)
+        await self._invalidate_cache(user)
         entity = await session.scalar(stmt)
         return self.schema_class.model_validate(entity).model_dump()
 
@@ -134,6 +174,8 @@ class CRUDService:
             raise self.not_found_error
 
         entity = await self.check_permissions_to_edit_entity(entity, user, session)
+
+        await self._invalidate_cache(user)
 
         if self.use_custom_remove:
             return await self.custom_remove(entity, session)

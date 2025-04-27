@@ -8,6 +8,7 @@ wheels/
 .idea/
 
 .env
+.env.docker
 uv.lock
 
 # Virtual environments
