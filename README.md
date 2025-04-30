@@ -1,5 +1,5 @@
 # iBook
-__Backend__ часть для книжного маркетплейса `ibook`, написаная на современном асинхронном FastAPI, детальнее - используются так же PostgreSQL, Redis, RabbitMQ, Celery, Alembic, SQLAlchemy, pytest, gunicorn. Дополнительно проект настроен на использование `Stripe` для оплаты заказов на книги.
+__Backend__ часть для книжного маркетплейса `ibook`, написаная на современном асинхронном FastAPI. Так же используются PostgreSQL, Redis, RabbitMQ, Celery, Alembic, SQLAlchemy, pytest, gunicorn, Docker, Prometheus, Grafana, Sentry. Дополнительно проект настроен на использование `Stripe` для оплаты заказов на книги.
 ## Установка
 ```bash
 git clone https://github.com/involved-entity/ibook
