@@ -71,6 +71,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
+      prometheus:
+        condition: service_started
     env_file:
       - ./.env.docker
     networks:
@@ -87,11 +89,33 @@ services:
     networks:
       - app_network
 
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - app_network
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - app_network
+
+
 volumes:
   postgres_data:
   rabbitmq_data:
   pgadmin_data:
   redis_data:
+  grafana-storage:
 
 networks:
   app_network:
