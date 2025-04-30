@@ -2,15 +2,24 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+import sentry_sdk
+from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 
 from core.api import router
 from core.config import settings
 from core.middleware.error import server_error_middleware
 from core.middleware.log import log_middleware
 
+sentry_sdk.init(
+    dsn=settings.sentry_dsn,
+    traces_sample_rate=1.0,
+)
+
+
 app = FastAPI()
 app.include_router(router)
 
+app.add_middleware(SentryAsgiMiddleware)  # noqa
 app.add_middleware(
     CORSMiddleware,  # noqa
     allow_origins=["*"],

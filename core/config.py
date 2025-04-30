@@ -47,6 +47,8 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
     redis_cache_names_sep: str = ":"
 
+    sentry_dsn: str
+
     class Config:
         env_file = ".env"
         extra = "allow"
